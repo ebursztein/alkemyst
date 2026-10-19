@@ -1,0 +1,16 @@
+{
+  "name": "@alkemyst/sdk",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "5.104.4",
+    "openapi-fetch": "0.17.0",
+    "openapi-react-query": "0.5.4",
+    "react": "19.3.1"
+  }
+}

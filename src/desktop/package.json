@@ -1,0 +1,22 @@
+{
+  "name": "@alkemyst/desktop",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@alkemyst/sdk": "workspace:*",
+    "@tanstack/react-query": "5.104.4",
+    "@tanstack/react-router": "1.170.45",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.1.2",
+    "vite": "8.3.4"
+  }
+}

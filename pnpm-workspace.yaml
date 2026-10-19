@@ -1,0 +1,6 @@
+packages:
+  - "src/desktop"
+  - "src/sdk"
+  - "src/site"
+onlyBuiltDependencies:
+  - esbuild

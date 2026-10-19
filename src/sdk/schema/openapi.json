@@ -1,0 +1,64 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Alkemyst API",
+    "description": "",
+    "contact": {
+      "name": "Elie Bursztein"
+    },
+    "license": {
+      "name": "Apache-2.0",
+      "identifier": "Apache-2.0"
+    },
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:47831",
+      "description": "Local Alkemyst service"
+    }
+  ],
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "tags": [],
+        "summary": "Read the local service build identity.",
+        "operationId": "healthGet",
+        "responses": {
+          "200": {
+            "description": "Build identity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildInfo"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {}
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BuildInfo": {
+        "type": "object",
+        "required": [
+          "name",
+          "version"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

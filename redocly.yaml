@@ -1,0 +1,6 @@
+extends:
+  - minimal
+rules:
+  no-empty-servers: error
+  operation-summary: error
+  security-defined: error

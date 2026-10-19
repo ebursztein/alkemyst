@@ -1,0 +1,11 @@
+{
+  "maxLines": 300,
+  "exemptions": ["src/sdk/src/generated/schema.d.ts", "src/sdk/schema/openapi.json"],
+  "packages": {
+    "desktop": ["sdk"],
+    "sdk": [],
+    "core": ["landlord"],
+    "landlord": [],
+    "site": []
+  }
+}

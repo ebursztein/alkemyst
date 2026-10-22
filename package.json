@@ -10,7 +10,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && pnpm --filter @alkemyst/site check",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
@@ -18,14 +18,17 @@
     "sdk:generate": "node scripts/generate-sdk.mjs",
     "sdk:check": "node scripts/generate-sdk.mjs --check",
     "test:rust": "cargo test --workspace --locked",
-    "coverage:rust": "node scripts/coverage-rust.mjs",
+    "coverage:rust": "pnpm --filter @alkemyst/desktop build && node scripts/coverage-rust.mjs",
     "security": "node scripts/security.mjs",
     "verify": "pnpm format:check && pnpm check:architecture && pnpm test:tooling && pnpm lint && pnpm typecheck && pnpm test:coverage && cargo fmt --all -- --check && cargo clippy --workspace --all-targets --locked -- -D warnings && pnpm test:rust && pnpm coverage:rust && pnpm sdk:check && pnpm api:lint",
     "test:tooling": "node --test scripts/tests/*.test.mjs",
     "gate:probes": "node scripts/gate-zero-probes.mjs",
-    "api:lint": "redocly lint src/sdk/schema/openapi.json"
+    "api:lint": "redocly lint src/sdk/schema/openapi.json",
+    "native:build": "node scripts/native-build.mjs",
+    "test:site": "playwright test --config playwright.site.config.ts"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.64.1",
     "@redocly/cli": "2.64.1",
@@ -44,6 +47,8 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.71.2",
     "vite": "8.3.4",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "eslint-plugin-astro": "3.2.1",
+    "prettier-plugin-astro": "1.1.1"
   }
 }

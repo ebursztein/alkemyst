@@ -1,0 +1,105 @@
+.app-layout {
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr);
+  min-height: 100vh;
+}
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 32px 20px 22px;
+  border-right: 1px solid var(--line);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 26px;
+  font-weight: 750;
+  letter-spacing: -1px;
+  margin-bottom: 48px;
+}
+.brand:hover {
+  text-decoration: none;
+}
+.brand svg {
+  width: 29px;
+  height: 35px;
+  color: var(--brand);
+}
+.brand-dot {
+  color: var(--brand);
+}
+.sidebar-label,
+.eyebrow {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+.sidebar-label {
+  padding-left: 12px;
+}
+.sidebar nav {
+  display: grid;
+  gap: 5px;
+}
+.sidebar nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  color: var(--muted);
+  border-radius: 8px;
+  font-weight: 600;
+}
+.sidebar nav a > span {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  font-size: 20px;
+}
+.sidebar nav a:hover {
+  background: var(--surface-alt);
+  text-decoration: none;
+  color: var(--ink);
+}
+.sidebar nav a.active {
+  background: var(--brand-tint);
+  color: var(--brand);
+}
+.sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 10px 12px;
+  border-top: 1px solid var(--line);
+}
+.sidebar-footer strong,
+.sidebar-footer small {
+  display: block;
+}
+.sidebar-footer strong {
+  font-size: 12px;
+}
+.sidebar-note {
+  font-size: 11px;
+  padding-left: 10px;
+  color: var(--muted);
+  margin: 0;
+}
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #17b26a;
+  box-shadow: 0 0 0 3px #17b26a15;
+}
+.status-dot.disconnected {
+  background: var(--error);
+}

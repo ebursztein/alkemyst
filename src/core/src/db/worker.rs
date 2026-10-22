@@ -23,7 +23,7 @@ impl Worker {
         connection.busy_timeout(Duration::from_secs(5))?;
         connection.execute_batch(system::CONFIGURE)?;
         let version: i64 = connection.query_row(system::SCHEMA_VERSION, [], |row| row.get(0))?;
-        if version > 8 {
+        if version > 9 {
             return Err(Error::FutureSchema);
         }
         if version == 0 {
@@ -69,6 +69,11 @@ impl Worker {
             let transaction = connection.transaction()?;
             transaction.execute_batch(system::SIMULATIONS)?;
             transaction.execute_batch(system::SIMULATION_DETAILS)?;
+            transaction.commit()?;
+        }
+        if version < 9 {
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(system::PRACTICE)?;
             transaction.commit()?;
         }
         let table_revisions = connection
@@ -180,6 +185,21 @@ impl Worker {
             cache_bytes: self.cache.bytes,
             ..self.metrics.clone()
         }
+    }
+
+    pub fn backup(&self, destination: &Path) -> Result<()> {
+        super::snapshot::write(&self.connection, destination)
+    }
+
+    pub fn stage_backup(&self, source: &Path, destination: &Path) -> Result<()> {
+        super::snapshot::stage(&self.connection, source, destination)
+    }
+
+    pub fn restore(&mut self, source: &Path) -> Result<()> {
+        let revisions = super::snapshot::restore(&mut self.connection, source)?;
+        self.cache.clear();
+        self.metrics.table_revisions = revisions;
+        Ok(())
     }
 }
 

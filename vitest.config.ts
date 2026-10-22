@@ -8,10 +8,12 @@ export default defineConfig({
       exclude: [
         "src/**/*.test.{ts,tsx}",
         "src/**/*.spec.{ts,tsx}",
+        "src/desktop/tests/browser/fixture.ts", // Playwright-only test fixture, not application code.
         "src/**/generated/**",
         "src/**/vite.config.ts",
         "src/**/env.d.ts",
         "src/**/dist/**",
+        "src/**/.astro/**", // Astro-generated virtual-module types.
         "src/**/node_modules/**",
       ],
       reporter: ["text", "json-summary", "lcov", "html"],

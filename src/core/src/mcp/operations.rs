@@ -11,6 +11,48 @@ use serde_json::{Value, json};
 
 pub async fn invoke(app: &Application, name: &str, args: Value) -> Result<Value, ApiError> {
     match name {
+        "practiceCreate" => {
+            let c: crate::api::CreatePracticeCommand = decode(args)?;
+            encode(
+                app.practice
+                    .create(&c.idempotency_key, c.input, Origin::Agent)
+                    .await?,
+            )
+        }
+        "practiceList" => encode(app.practice.list(decode(args)?).await?),
+        "practiceGet" => encode(
+            app.practice
+                .get(&string(&args, "id")?)
+                .await?
+                .ok_or_else(ApiError::missing)?,
+        ),
+        "practiceInputsGet" => encode(
+            app.practice
+                .inputs(&string(&args, "id")?)
+                .await?
+                .ok_or_else(ApiError::missing)?,
+        ),
+        "practiceAct" => {
+            let id = string(&args, "id")?;
+            let mut command = args;
+            command
+                .as_object_mut()
+                .expect("object arguments")
+                .remove("id");
+            let c: crate::api::PracticeActionCommand = decode(command)?;
+            encode(
+                app.practice
+                    .act(
+                        &c.idempotency_key,
+                        &id,
+                        c.expected_revision,
+                        c.action,
+                        Origin::Agent,
+                    )
+                    .await?,
+            )
+        }
+
         "deckVersionsCompare" => encode(
             app.analysis
                 .compare(&string(&args, "id")?, &string(&args, "candidate_id")?)
@@ -103,6 +145,15 @@ pub async fn invoke(app: &Application, name: &str, args: Value) -> Result<Value,
         }
         "catalogStatusGet" => encode(app.catalog.status().await?),
         "catalogRefresh" => encode(app.refresh_catalog().await?),
+        "deckVersionsList" => {
+            let page: PageQuery = decode(args.clone())?;
+            encode(
+                app.decks
+                    .versions(&string(&args, "id")?, page.limit, page.cursor)
+                    .await?
+                    .ok_or_else(ApiError::missing)?,
+            )
+        }
         "decksList" => {
             let page: PageQuery = decode(args)?;
             encode(app.decks.list(page.limit, page.cursor).await?)

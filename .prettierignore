@@ -11,3 +11,9 @@ coverage
 node_modules
 playwright-report
 test-results
+
+# Tauri-generated capability schemas (not maintained sources).
+src/desktop/src-tauri/gen/
+
+# Astro-generated content and virtual module types.
+**/.astro/

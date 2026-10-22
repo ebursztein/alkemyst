@@ -192,3 +192,30 @@ impl From<crate::analysis::Error> for ApiError {
         }
     }
 }
+
+impl From<crate::practice::Error> for ApiError {
+    fn from(error: crate::practice::Error) -> Self {
+        use crate::practice::Error;
+        match error {
+            Error::Database(e) => e.into(),
+            Error::Analysis(e) => e.into(),
+            Error::Invalid(message) => Self::invalid(message),
+            Error::NotFound => Self::missing(),
+            Error::Conflict => Self::new(
+                StatusCode::CONFLICT,
+                ErrorCode::Conflict,
+                "Idempotency conflict or stale practice revision",
+            ),
+            Error::Incompatible => Self::new(
+                StatusCode::UNPROCESSABLE_ENTITY,
+                ErrorCode::UnsupportedModel,
+                "Practice version is incompatible",
+            ),
+            Error::Json(_) => Self::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ErrorCode::Internal,
+                "Invalid stored practice state",
+            ),
+        }
+    }
+}

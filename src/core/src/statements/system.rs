@@ -27,3 +27,11 @@ pub const HISTORY_MATCHES: &str = include_str!("../../migrations/007_history_mat
 
 pub const SIMULATIONS: &str = include_str!("../../migrations/008_simulations.sql");
 pub const SIMULATION_DETAILS: &str = include_str!("../../migrations/008_simulation_details.sql");
+
+pub const PRACTICE: &str = include_str!("../../migrations/009_practice.sql");
+
+pub const BACKUP_READ_ONLY: &str = "PRAGMA trusted_schema=OFF; PRAGMA query_only=ON;";
+pub const BACKUP_INTEGRITY: &str = "PRAGMA integrity_check";
+pub const BACKUP_FOREIGN_KEYS: &str = "PRAGMA foreign_key_check";
+pub const BACKUP_SCHEMA: &str = "SELECT json_array(type, name, tbl_name, sql)
+    FROM sqlite_schema WHERE name NOT GLOB 'sqlite_*' ORDER BY type, name";

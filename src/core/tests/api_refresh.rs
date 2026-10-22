@@ -7,25 +7,23 @@ use alkemyst_core::{
 };
 use api_support::{TOKEN, call};
 use axum::http::StatusCode;
-use std::{
-    io::BufRead,
-    sync::{Arc, Mutex},
-};
+use std::{io::BufRead, sync::Arc};
 
 struct BlockedProvider {
     started: Arc<tokio::sync::Notify>,
-    resume: Mutex<std::sync::mpsc::Receiver<()>>,
+    resume: tokio::sync::Mutex<tokio::sync::oneshot::Receiver<()>>,
 }
+#[async_trait::async_trait]
 impl BulkProvider for BlockedProvider {
-    fn descriptor(&self) -> Result<BulkDescriptor, Error> {
+    async fn descriptor(&self) -> Result<BulkDescriptor, Error> {
         self.started.notify_one();
-        self.resume.lock().unwrap().recv().unwrap();
+        (&mut *self.resume.lock().await).await.unwrap();
         Err(Error::Io(std::io::Error::new(
             std::io::ErrorKind::ConnectionReset,
             "test outage",
         )))
     }
-    fn download(&self, _: &BulkDescriptor) -> Result<Box<dyn BufRead + Send>, Error> {
+    async fn download(&self, _: &BulkDescriptor) -> Result<Box<dyn BufRead + Send>, Error> {
         unreachable!("manifest fails first")
     }
 }
@@ -33,12 +31,12 @@ impl BulkProvider for BlockedProvider {
 #[tokio::test]
 async fn refresh_busy_and_network_failures_are_typed_and_keep_local_reads_available() {
     let started = Arc::new(tokio::sync::Notify::new());
-    let (resume, receiver) = std::sync::mpsc::channel();
+    let (resume, receiver) = tokio::sync::oneshot::channel();
     let app = Application::with_bulk_provider(
         Engine::memory(4096).unwrap(),
         Arc::new(BlockedProvider {
             started: started.clone(),
-            resume: Mutex::new(receiver),
+            resume: tokio::sync::Mutex::new(receiver),
         }),
     );
     let routes = router(app, AuthConfig::new(TOKEN.into(), false).unwrap());

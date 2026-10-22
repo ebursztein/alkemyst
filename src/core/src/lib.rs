@@ -17,3 +17,5 @@ pub mod ingest;
 pub mod history;
 
 pub mod analysis;
+
+pub mod practice;

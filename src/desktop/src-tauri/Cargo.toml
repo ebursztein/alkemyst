@@ -1,0 +1,48 @@
+[package]
+name = "alkemyst-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+build = "build.rs"
+
+[lints]
+workspace = true
+
+[lib]
+name = "alkemyst_desktop"
+
+[features]
+native-smoke = []
+custom-protocol = ["tauri/custom-protocol"]
+
+[dependencies]
+alkemyst-core = { path = "../../core" }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.154"
+thiserror = "=2.0.21"
+tokio = { version = "=1.53.3", features = ["rt-multi-thread", "macros", "sync", "time"] }
+tokio-util = { version = "=0.7.19", features = ["rt"] }
+tauri = { version = "=2.12.5", features = ["tray-icon", "image-png"] }
+tauri-plugin-autostart = "=2.7.0"
+tauri-plugin-single-instance = "=2.5.4"
+tauri-plugin-dialog = "=2.8.3"
+tempfile = "=3.27.0"
+
+[build-dependencies]
+embed-resource = "=3.0.12"
+tauri-build = { version = "=2.7.4", features = [] }
+
+[dev-dependencies]
+rusqlite = { version = "=0.40.2", default-features = false, features = ["bundled"] }
+tauri = { version = "=2.12.5", features = ["test"] }
+tempfile = "=3.27.0"
+reqwest = { version = "=0.13.5", default-features = false, features = ["rustls", "json"] }
+
+[[test]]
+name = "native_smoke"
+harness = false
+required-features = ["native-smoke"]
+
+[target.'cfg(windows)'.dependencies]
+winreg = "=0.56.0"

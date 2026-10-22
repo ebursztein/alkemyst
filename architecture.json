@@ -8,10 +8,10 @@
     "src/core/tests/fixtures/boros-equipment.json"
   ],
   "packages": {
-    "desktop": ["sdk"],
+    "desktop": ["sdk", "core"],
     "sdk": [],
     "core": ["landlord"],
     "landlord": [],
-    "site": []
+    "site": ["desktop"]
   }
 }

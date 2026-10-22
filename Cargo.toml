@@ -1,5 +1,5 @@
 [workspace]
-members = ["src/core", "src/landlord"]
+members = ["src/core", "src/landlord", "src/desktop/src-tauri"]
 resolver = "3"
 
 [workspace.package]

@@ -9,7 +9,7 @@ Automatic match capture, deck versions, mana analysis, and local MCP access.
 
 ## Development
 
-Requirements: Node 24.14.1, pnpm 10.33.2, Rust 1.95.0.
+Requirements: Node 24.16.0, pnpm 10.33.2, Rust 1.95.0.
 
 ```sh
 pnpm install --frozen-lockfile
@@ -217,3 +217,15 @@ remain explicit, including null mana-value bins. Printing-only changes cancel
 out when both references resolve to the same card. These deltas contain no
 inferred win rates or simulation results; compare those through their separately
 labeled operations and sample counts.
+
+## Manual practice
+
+`/v1/practice` provides saved opening hands, London mulligans, ordered bottoming,
+draws, basic turns and visible-card controls through REST, the generated SDK and
+MCP. Sessions freeze their deck metadata and seed; immutable steps use revision
+checks and idempotency keys. Practice is a manual sandbox, with mana payments,
+card abilities and combat left to the player. See [practice semantics](src/core/src/practice/README.md).
+
+`GET /v1/decks/{id}/versions` (`deckVersionsList` in MCP) provides paged immutable
+version summaries with SQL-computed main/sideboard counts. The generated SDK
+exposes the same opaque-cursor operation for version browsing and comparison.

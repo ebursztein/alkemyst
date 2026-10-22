@@ -1,0 +1,50 @@
+{
+  "supportedTargets": ["aarch64-apple-darwin", "x86_64-pc-windows-msvc"],
+  "exceptions": [
+    {
+      "package": "glib",
+      "version": "0.18.5",
+      "advisories": ["RUSTSEC-2024-0429", "GHSA-wrw7-89jp-8q8g"],
+      "expires": "2026-11-05",
+      "owner": "ebursztein",
+      "reason": "Linux-only Tauri dependency; verified absent from both supported all-feature desktop target graphs. No Linux build or release is supported.",
+      "remediation": "GTK 0.18 requires GLib 0.18; the fix is in GLib >=0.20, outside its semver range."
+    },
+    {
+      "package": "proc-macro-error",
+      "version": "1.0.4",
+      "advisories": ["RUSTSEC-2024-0370"],
+      "expires": "2026-11-05",
+      "owner": "ebursztein",
+      "reason": "Linux-only Tauri dependency; verified absent from both supported all-feature desktop target graphs. No Linux build or release is supported.",
+      "remediation": "GTK/glib-macros 0.18 requires the abandoned macro crate; migrate with the GTK dependency family."
+    },
+    {
+      "package": "zbus_names",
+      "version": "4.3.5",
+      "advisories": ["RUSTSEC-2026-0371"],
+      "expires": "2026-11-05",
+      "owner": "ebursztein",
+      "reason": "Linux-only Tauri dependency; verified absent from both supported all-feature desktop target graphs. No Linux build or release is supported.",
+      "remediation": "Linux single-instance uses zbus 5; migrate when its plugin supports zbus 6."
+    },
+    {
+      "package": "zvariant",
+      "version": "5.15.1",
+      "advisories": ["RUSTSEC-2026-0370"],
+      "expires": "2026-11-05",
+      "owner": "ebursztein",
+      "reason": "Linux-only Tauri dependency; verified absent from both supported all-feature desktop target graphs. No Linux build or release is supported.",
+      "remediation": "The standalone crate merged into zbus 6; the single-instance plugin requires zbus 5."
+    },
+    {
+      "package": "zvariant_derive",
+      "version": "5.15.1",
+      "advisories": ["RUSTSEC-2026-0372"],
+      "expires": "2026-11-05",
+      "owner": "ebursztein",
+      "reason": "Linux-only Tauri dependency; verified absent from both supported all-feature desktop target graphs. No Linux build or release is supported.",
+      "remediation": "The standalone macro crate merged into zbus 6; migrate with the single-instance plugin."
+    }
+  ]
+}

@@ -8,7 +8,9 @@ mod history;
 mod models;
 mod notes;
 mod openapi;
+mod practice;
 mod probabilities;
+pub(crate) use practice::{CreatePracticeCommand, PracticeActionCommand};
 mod server;
 mod simulations;
 pub use openapi::ApiDoc;
@@ -48,6 +50,10 @@ pub(super) fn router_with_mcp(
     let state = AppState { app, auth };
     let protected = Router::new()
         .nest_service("/mcp", mcp)
+        .route("/v1/practice", get(practice::list).post(practice::create))
+        .route("/v1/practice/{id}", get(practice::get))
+        .route("/v1/practice/{id}/inputs", get(practice::inputs))
+        .route("/v1/practice/{id}/actions", post(practice::act))
         .route(
             "/v1/simulations",
             get(simulations::list).post(simulations::create),
@@ -67,6 +73,7 @@ pub(super) fn router_with_mcp(
         .route("/v1/capture", get(history::capture))
         .route("/v1/discovery", get(discovery::get))
         .route("/v1/decks", get(decks::list).post(decks::create))
+        .route("/v1/decks/{id}/versions", get(decks::versions))
         .route("/v1/deck-versions", post(decks::create_version))
         .route("/v1/deck-versions/{id}", get(decks::version))
         .route("/v1/deck-versions/{id}/analysis", get(analysis::profile))

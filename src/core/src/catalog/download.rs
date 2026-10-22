@@ -1,8 +1,9 @@
 use super::{Catalog, CatalogSource, CatalogStatus, Error, Result};
-use reqwest::blocking::Client;
+use reqwest::Client;
 use serde_json::Value;
-use std::io::{BufRead, BufReader, Read, Seek, SeekFrom, Write};
+use std::io::{BufRead, BufReader, Seek, SeekFrom};
 use std::time::Duration;
+use tokio::io::{AsyncWrite, AsyncWriteExt};
 
 const MAX_ARCHIVE: u64 = 512 * 1024 * 1024;
 
@@ -12,32 +13,44 @@ pub struct BulkDescriptor {
     pub compressed_size: u64,
 }
 
-/// Blocking acquisition boundary: callers execute these methods off the UI thread.
+/// Cancellation-safe acquisition: dropping the future must stop network work.
+#[async_trait::async_trait]
 pub trait BulkProvider: Send + Sync + 'static {
-    fn descriptor(&self) -> Result<BulkDescriptor>;
-    fn download(&self, descriptor: &BulkDescriptor) -> Result<Box<dyn BufRead + Send>>;
+    async fn descriptor(&self) -> Result<BulkDescriptor>;
+    async fn download(&self, descriptor: &BulkDescriptor) -> Result<Box<dyn BufRead + Send>>;
 }
 
 pub struct Scryfall;
 
+#[async_trait::async_trait]
 impl BulkProvider for Scryfall {
-    fn descriptor(&self) -> Result<BulkDescriptor> {
-        let response = client()?
+    async fn descriptor(&self) -> Result<BulkDescriptor> {
+        let mut response = client()?
             .get("https://api.scryfall.com/bulk-data/default_cards")
-            .send()?
+            .send()
+            .await?
             .error_for_status()?;
-        let value: Value = serde_json::from_reader(response.take(1024 * 1024))?;
-        descriptor(value)
+        let mut bytes = Vec::new();
+        while let Some(chunk) = response.chunk().await? {
+            if bytes.len() + chunk.len() > 1024 * 1024 {
+                return Err(Error::Invalid("oversized bulk manifest"));
+            }
+            bytes.extend_from_slice(&chunk);
+        }
+        descriptor(serde_json::from_slice(&bytes)?)
     }
 
-    fn download(&self, descriptor: &BulkDescriptor) -> Result<Box<dyn BufRead + Send>> {
+    async fn download(&self, descriptor: &BulkDescriptor) -> Result<Box<dyn BufRead + Send>> {
         validate(descriptor)?;
         let response = client()?
             .get(&descriptor.source.url)
-            .send()?
+            .send()
+            .await?
             .error_for_status()?;
         let mut file = tempfile::NamedTempFile::new()?;
-        copy_archive(response, &mut file, descriptor.compressed_size)?;
+        let mut writer = tokio::fs::File::from_std(file.reopen()?);
+        copy_archive(response, &mut writer, descriptor.compressed_size).await?;
+        drop(writer);
         file.as_file_mut().seek(SeekFrom::Start(0))?;
         Ok(Box::new(BufReader::new(flate2::read::MultiGzDecoder::new(
             file,
@@ -52,20 +65,13 @@ impl Catalog {
 
     pub async fn refresh_with<P: BulkProvider>(&self, provider: P) -> Result<CatalogStatus> {
         let _refresh = self.refresh.try_lock().map_err(|_| Error::Busy)?;
-        let provider = std::sync::Arc::new(provider);
-        let fetch = provider.clone();
-        let descriptor = tokio::task::spawn_blocking(move || fetch.descriptor())
-            .await
-            .map_err(|_| Error::ParserStopped)??;
+        let descriptor = provider.descriptor().await?;
         validate(&descriptor)?;
         let status = self.status().await?;
         if status.source.as_ref() == Some(&descriptor.source) {
             return Ok(status);
         }
-        let fetch_descriptor = descriptor.clone();
-        let reader = tokio::task::spawn_blocking(move || provider.download(&fetch_descriptor))
-            .await
-            .map_err(|_| Error::ParserStopped)??;
+        let reader = provider.download(&descriptor).await?;
         self.import_inner(reader, descriptor.source).await
     }
 }
@@ -119,11 +125,25 @@ fn validate(descriptor: &BulkDescriptor) -> Result<()> {
     Ok(())
 }
 
-fn copy_archive(reader: impl Read, writer: &mut impl Write, expected: u64) -> Result<()> {
-    let received = std::io::copy(&mut reader.take(expected + 1), writer)?;
-    if received != expected {
-        return Err(Error::Invalid("truncated or oversized bulk archive"));
+async fn copy_archive(
+    mut reader: reqwest::Response,
+    writer: &mut (impl AsyncWrite + Unpin),
+    expected: u64,
+) -> Result<()> {
+    let mut received = 0_u64;
+    while let Some(chunk) = reader.chunk().await? {
+        received = received
+            .checked_add(chunk.len() as u64)
+            .ok_or(Error::Invalid("oversized bulk archive"))?;
+        if received > expected {
+            return Err(Error::Invalid("oversized bulk archive"));
+        }
+        writer.write_all(&chunk).await?;
     }
+    if received != expected {
+        return Err(Error::Invalid("truncated bulk archive"));
+    }
+    writer.flush().await?;
     Ok(())
 }
 
@@ -131,11 +151,12 @@ fn copy_archive(reader: impl Read, writer: &mut impl Write, expected: u64) -> Re
 #[path = "../../tests/unit/catalog_download.rs"]
 mod tests;
 
+#[async_trait::async_trait]
 impl<P: BulkProvider + ?Sized> BulkProvider for std::sync::Arc<P> {
-    fn descriptor(&self) -> Result<BulkDescriptor> {
-        self.as_ref().descriptor()
+    async fn descriptor(&self) -> Result<BulkDescriptor> {
+        self.as_ref().descriptor().await
     }
-    fn download(&self, descriptor: &BulkDescriptor) -> Result<Box<dyn BufRead + Send>> {
-        self.as_ref().download(descriptor)
+    async fn download(&self, descriptor: &BulkDescriptor) -> Result<Box<dyn BufRead + Send>> {
+        self.as_ref().download(descriptor).await
     }
 }

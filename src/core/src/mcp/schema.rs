@@ -5,6 +5,11 @@ use utoipa::OpenApi;
 
 // Adding a REST endpoint never grants an agent a new capability implicitly.
 pub const ALLOWLIST: &[&str] = &[
+    "practiceCreate",
+    "practiceList",
+    "practiceGet",
+    "practiceInputsGet",
+    "practiceAct",
     "deckVersionsCompare",
     "simulationsCreate",
     "simulationsList",
@@ -30,6 +35,7 @@ pub const ALLOWLIST: &[&str] = &[
     "catalogStatusGet",
     "catalogRefresh",
     "decksList",
+    "deckVersionsList",
     "decksCreate",
     "deckVersionGet",
     "deckVersionCreate",
@@ -61,16 +67,7 @@ pub fn from_openapi(document: &Value) -> Vec<Tool> {
             let mut input =
                 operation["requestBody"]["content"]["application/json"]["schema"].clone();
             if input.is_null() {
-                let mut properties = serde_json::Map::new();
-                let mut required = vec![];
-                for param in operation["parameters"].as_array().into_iter().flatten() {
-                    let name = param["name"].as_str().expect("OpenAPI parameter name");
-                    properties.insert(name.into(), param["schema"].clone());
-                    if param["required"] == true {
-                        required.push(name);
-                    }
-                }
-                input = json!({"type":"object", "properties":properties, "required":required, "additionalProperties":false});
+                input = json!({"type":"object", "properties":{}, "required":[], "additionalProperties":false});
             }
             // Tool roots must be objects, so resolve the request's top-level reference.
             if let Some(reference) = input["$ref"].as_str() {
@@ -79,6 +76,21 @@ pub fn from_openapi(document: &Value) -> Vec<Tool> {
                     .expect("OpenAPI schema")
                     .clone();
             }
+            // Body-bearing operations can also have path/query parameters. They
+            // belong in the flat MCP input, while the REST body remains unchanged.
+            let mut required = input["required"].as_array().cloned().unwrap_or_default();
+            for param in operation["parameters"].as_array().into_iter().flatten() {
+                let name = param["name"].as_str().expect("OpenAPI parameter name");
+                assert!(
+                    input["properties"].get(name).is_none(),
+                    "MCP input parameter collides with a body field"
+                );
+                input["properties"][name] = param["schema"].clone();
+                if param["required"] == true {
+                    required.push(json!(name));
+                }
+            }
+            input["required"] = json!(required);
             localize(&mut input, document);
             let mut tool = Tool::new(
                 id.to_owned(),

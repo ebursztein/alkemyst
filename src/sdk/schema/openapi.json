@@ -781,6 +781,76 @@
         }
       }
     },
+    "/v1/decks/{id}/versions": {
+      "get": {
+        "tags": [
+          "decks"
+        ],
+        "summary": "List sealed immutable versions in descending creation order. Metadata and\ncard counts are aggregated by SQL; cursors remain opaque to callers.",
+        "operationId": "deckVersionsList",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 40,
+              "maximum": 100,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionPage"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/discovery": {
       "get": {
         "tags": [
@@ -1378,6 +1448,288 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Note"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/practice": {
+      "get": {
+        "tags": [
+          "practice"
+        ],
+        "summary": "List local practice sessions in stable creation order, independently of match history.",
+        "operationId": "practiceList",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 40,
+              "maximum": 100,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticePage"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "practice"
+        ],
+        "summary": "Start a manual sandbox using frozen main-deck card metadata and a reproducible\nshuffle. Mana payments, abilities, combat and state-based actions are manual.",
+        "operationId": "practiceCreate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePracticeCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeView"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/practice/{id}": {
+      "get": {
+        "tags": [
+          "practice"
+        ],
+        "summary": "Read the latest saved step without revealing the ordered library.",
+        "operationId": "practiceGet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeView"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/practice/{id}/actions": {
+      "post": {
+        "tags": [
+          "practice"
+        ],
+        "summary": "Append one immutable practice step at the expected revision. Reusing the key\nreturns the original step; a competing action returns conflict without advancing.",
+        "operationId": "practiceAct",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PracticeActionCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeView"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/practice/{id}/inputs": {
+      "get": {
+        "tags": [
+          "practice"
+        ],
+        "summary": "Read frozen card metadata. This is the original deck roster, not its shuffle order.",
+        "operationId": "practiceInputsGet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeckSnapshot"
                 }
               }
             }
@@ -2160,9 +2512,23 @@
         "required": [
           "cards",
           "printings",
-          "arena_ids"
+          "arena_ids",
+          "arena_aliases",
+          "arena_alias_revision"
         ],
         "properties": {
+          "arena_alias_revision": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Changes when an installed Arena identity import commits.",
+            "minimum": 0
+          },
+          "arena_aliases": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Installed Arena identities, distinct from Scryfall's direct Arena IDs.",
+            "minimum": 0
+          },
           "arena_ids": {
             "type": "integer",
             "format": "int64",
@@ -2372,6 +2738,22 @@
           },
           "input": {
             "$ref": "#/components/schemas/NewNote"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreatePracticeCommand": {
+        "type": "object",
+        "required": [
+          "idempotency_key",
+          "input"
+        ],
+        "properties": {
+          "idempotency_key": {
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/components/schemas/NewPractice"
           }
         },
         "additionalProperties": false
@@ -3303,6 +3685,29 @@
           }
         }
       },
+      "NewPractice": {
+        "type": "object",
+        "required": [
+          "version_id",
+          "on_the_play"
+        ],
+        "properties": {
+          "on_the_play": {
+            "type": "boolean"
+          },
+          "seed": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-fA-F]{16}$"
+          },
+          "version_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "NewVersion": {
         "type": "object",
         "required": [
@@ -3404,6 +3809,546 @@
           "agent",
           "arena",
           "import"
+        ]
+      },
+      "PracticeAction": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "mulligan"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "bottom",
+              "kind"
+            ],
+            "properties": {
+              "bottom": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32",
+                  "minimum": 0
+                }
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "keep"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "draw"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "next_turn"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "card",
+              "face",
+              "kind"
+            ],
+            "properties": {
+              "card": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              },
+              "face": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "play_land"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Manual play: mana payments and card abilities are not enforced.",
+            "required": [
+              "card",
+              "face",
+              "destination",
+              "kind"
+            ],
+            "properties": {
+              "card": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              },
+              "destination": {
+                "$ref": "#/components/schemas/PracticeZone"
+              },
+              "face": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "play"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "description": "Explicit sandbox override for visible cards only; never reveals the library.",
+            "required": [
+              "card",
+              "destination",
+              "kind"
+            ],
+            "properties": {
+              "card": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              },
+              "destination": {
+                "$ref": "#/components/schemas/PracticeZone"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "move"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "card",
+              "tapped",
+              "kind"
+            ],
+            "properties": {
+              "card": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 0
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "tap"
+                ]
+              },
+              "tapped": {
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "finish"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "PracticeActionCommand": {
+        "type": "object",
+        "required": [
+          "idempotency_key",
+          "expected_revision",
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/PracticeAction"
+          },
+          "expected_revision": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 1000,
+            "minimum": 0
+          },
+          "idempotency_key": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PracticeCard": {
+        "type": "object",
+        "required": [
+          "id",
+          "reference",
+          "faces"
+        ],
+        "properties": {
+          "faces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PracticeFace"
+            }
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Stable physical-copy identity within this session; duplicates have distinct ids.",
+            "minimum": 0
+          },
+          "image_uri": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mana_cost": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "oracle_text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reference": {
+            "type": "string"
+          },
+          "type_line": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PracticeFace": {
+        "type": "object",
+        "properties": {
+          "image_uri": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mana_cost": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "oracle_text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type_line": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PracticePage": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PracticeSummary"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PracticePermanent": {
+        "type": "object",
+        "required": [
+          "card",
+          "face",
+          "tapped"
+        ],
+        "properties": {
+          "card": {
+            "$ref": "#/components/schemas/PracticeCard"
+          },
+          "face": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "tapped": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PracticePhase": {
+        "type": "string",
+        "enum": [
+          "opening",
+          "main",
+          "finished"
+        ]
+      },
+      "PracticeSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "version_id",
+          "name",
+          "revision",
+          "created_at",
+          "phase",
+          "turn",
+          "mulligans",
+          "decked"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "decked": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "mulligans": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "name": {
+            "type": "string"
+          },
+          "phase": {
+            "$ref": "#/components/schemas/PracticePhase"
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "turn": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "version_id": {
+            "type": "string"
+          }
+        }
+      },
+      "PracticeView": {
+        "type": "object",
+        "required": [
+          "id",
+          "version_id",
+          "revision",
+          "origin",
+          "last_action_origin",
+          "created_at",
+          "updated_at",
+          "seed",
+          "replay_version",
+          "practice_version",
+          "rules_mode",
+          "on_the_play",
+          "phase",
+          "mulligans",
+          "bottom_count",
+          "turn",
+          "library_count",
+          "land_played",
+          "decked",
+          "hand",
+          "battlefield",
+          "graveyard",
+          "exile",
+          "warnings"
+        ],
+        "properties": {
+          "battlefield": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PracticePermanent"
+            }
+          },
+          "bottom_count": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "decked": {
+            "type": "boolean"
+          },
+          "exile": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PracticeCard"
+            }
+          },
+          "graveyard": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PracticeCard"
+            }
+          },
+          "hand": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PracticeCard"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "land_played": {
+            "type": "boolean"
+          },
+          "last_action_origin": {
+            "$ref": "#/components/schemas/Origin"
+          },
+          "library_count": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "mulligans": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "on_the_play": {
+            "type": "boolean"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/Origin"
+          },
+          "phase": {
+            "$ref": "#/components/schemas/PracticePhase"
+          },
+          "practice_version": {
+            "type": "string"
+          },
+          "replay_version": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "rules_mode": {
+            "type": "string"
+          },
+          "seed": {
+            "type": "string"
+          },
+          "turn": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "updated_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "version_id": {
+            "type": "string"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PracticeZone": {
+        "type": "string",
+        "enum": [
+          "hand",
+          "battlefield",
+          "graveyard",
+          "exile"
         ]
       },
       "ProbabilityMethod": {
@@ -4360,6 +5305,82 @@
           "states": {
             "type": "integer",
             "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "VersionPage": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VersionSummary"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "VersionSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "deck_id",
+          "ordinal",
+          "name",
+          "format",
+          "origin",
+          "created_at",
+          "main_count",
+          "sideboard_count"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "deck_id": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "main_count": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "name": {
+            "type": "string"
+          },
+          "ordinal": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "origin": {
+            "$ref": "#/components/schemas/Origin"
+          },
+          "parent_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sideboard_count": {
+            "type": "integer",
+            "format": "int32",
             "minimum": 0
           }
         }

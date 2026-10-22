@@ -1,6 +1,7 @@
 //! Serialized SQLite access shared by every application adapter.
 mod cache;
 mod engine;
+mod snapshot;
 mod worker;
 
 pub use engine::Engine;
@@ -54,6 +55,8 @@ pub enum Error {
     RowCount { expected: usize, actual: usize },
     #[error("database schema is newer than this application")]
     FutureSchema,
+    #[error("invalid Alkemyst backup: {0}")]
+    InvalidBackup(&'static str),
     #[error("read statement must be read-only")]
     NotReadOnly,
     #[error("cannot start database worker: {0}")]

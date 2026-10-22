@@ -60,6 +60,21 @@ export async function coverRustCli() {
     } finally {
       await service.stop();
     }
+    const deferred = await startLocalService({
+      coverage: true,
+      deferCatalog: true,
+      failFirstCatalog: true,
+    });
+    try {
+      const options = { method: "POST", headers: { Authorization: `Bearer ${deferred.token}` } };
+      const url = `${deferred.baseUrl}/v1/catalog/refresh`;
+      assert.equal((await fetch(url, options)).status, 503);
+      const refreshed = await fetch(url, options);
+      assert.equal(refreshed.status, 200);
+      assert.equal((await refreshed.json()).cards, 3);
+    } finally {
+      await deferred.stop();
+    }
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

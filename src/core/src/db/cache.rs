@@ -86,4 +86,10 @@ impl Cache {
             !affected
         });
     }
+
+    pub fn clear(&mut self) {
+        self.entries.clear();
+        self.bytes = 0;
+        self.tick = 0;
+    }
 }

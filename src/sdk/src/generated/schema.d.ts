@@ -245,6 +245,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/decks/{id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List sealed immutable versions in descending creation order. Metadata and
+         *     card counts are aggregated by SQL; cursors remain opaque to callers.
+         */
+        get: operations["deckVersionsList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/discovery": {
         parameters: {
             query?: never;
@@ -393,6 +413,81 @@ export interface paths {
         put?: never;
         /** Add an idempotent local note alongside a deck or version. */
         post: operations["notesCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/practice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List local practice sessions in stable creation order, independently of match history. */
+        get: operations["practiceList"];
+        put?: never;
+        /**
+         * Start a manual sandbox using frozen main-deck card metadata and a reproducible
+         *     shuffle. Mana payments, abilities, combat and state-based actions are manual.
+         */
+        post: operations["practiceCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/practice/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the latest saved step without revealing the ordered library. */
+        get: operations["practiceGet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/practice/{id}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Append one immutable practice step at the expected revision. Reusing the key
+         *     returns the original step; a competing action returns conflict without advancing.
+         */
+        post: operations["practiceAct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/practice/{id}/inputs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read frozen card metadata. This is the original deck roster, not its shuffle order. */
+        get: operations["practiceInputsGet"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -615,6 +710,16 @@ export interface components {
             url: string;
         };
         CatalogStatus: {
+            /**
+             * Format: int64
+             * @description Changes when an installed Arena identity import commits.
+             */
+            arena_alias_revision: number;
+            /**
+             * Format: int64
+             * @description Installed Arena identities, distinct from Scryfall's direct Arena IDs.
+             */
+            arena_aliases: number;
             /** Format: int64 */
             arena_ids: number;
             /** Format: int64 */
@@ -675,6 +780,10 @@ export interface components {
         CreateNoteCommand: {
             idempotency_key: string;
             input: components["schemas"]["NewNote"];
+        };
+        CreatePracticeCommand: {
+            idempotency_key: string;
+            input: components["schemas"]["NewPractice"];
         };
         CreateSimulationCommand: {
             idempotency_key: string;
@@ -915,6 +1024,11 @@ export interface components {
             deck_id: string;
             version_id?: string | null;
         };
+        NewPractice: {
+            on_the_play: boolean;
+            seed?: string | null;
+            version_id: string;
+        };
         NewVersion: {
             cards: components["schemas"]["DeckCard"][];
             deck_id: string;
@@ -939,6 +1053,139 @@ export interface components {
         ObservedOutcome: "won" | "lost" | "draw";
         /** @enum {string} */
         Origin: "user" | "agent" | "arena" | "import";
+        PracticeAction: {
+            /** @enum {string} */
+            kind: "mulligan";
+        } | {
+            bottom: number[];
+            /** @enum {string} */
+            kind: "keep";
+        } | {
+            /** @enum {string} */
+            kind: "draw";
+        } | {
+            /** @enum {string} */
+            kind: "next_turn";
+        } | {
+            /** Format: int32 */
+            card: number;
+            /** Format: int32 */
+            face: number;
+            /** @enum {string} */
+            kind: "play_land";
+        } | {
+            /** Format: int32 */
+            card: number;
+            destination: components["schemas"]["PracticeZone"];
+            /** Format: int32 */
+            face: number;
+            /** @enum {string} */
+            kind: "play";
+        } | {
+            /** Format: int32 */
+            card: number;
+            destination: components["schemas"]["PracticeZone"];
+            /** @enum {string} */
+            kind: "move";
+        } | {
+            /** Format: int32 */
+            card: number;
+            /** @enum {string} */
+            kind: "tap";
+            tapped: boolean;
+        } | {
+            /** @enum {string} */
+            kind: "finish";
+        };
+        PracticeActionCommand: {
+            action: components["schemas"]["PracticeAction"];
+            /** Format: int32 */
+            expected_revision: number;
+            idempotency_key: string;
+        };
+        PracticeCard: {
+            faces: components["schemas"]["PracticeFace"][];
+            /**
+             * Format: int32
+             * @description Stable physical-copy identity within this session; duplicates have distinct ids.
+             */
+            id: number;
+            image_uri?: string | null;
+            mana_cost?: string | null;
+            name?: string | null;
+            oracle_text?: string | null;
+            reference: string;
+            type_line?: string | null;
+        };
+        PracticeFace: {
+            image_uri?: string | null;
+            mana_cost?: string | null;
+            name?: string | null;
+            oracle_text?: string | null;
+            type_line?: string | null;
+        };
+        PracticePage: {
+            items: components["schemas"]["PracticeSummary"][];
+            next_cursor?: string | null;
+        };
+        PracticePermanent: {
+            card: components["schemas"]["PracticeCard"];
+            /** Format: int32 */
+            face: number;
+            tapped: boolean;
+        };
+        /** @enum {string} */
+        PracticePhase: "opening" | "main" | "finished";
+        PracticeSummary: {
+            /** Format: int64 */
+            created_at: number;
+            decked: boolean;
+            id: string;
+            /** Format: int32 */
+            mulligans: number;
+            name: string;
+            phase: components["schemas"]["PracticePhase"];
+            /** Format: int32 */
+            revision: number;
+            /** Format: int32 */
+            turn: number;
+            version_id: string;
+        };
+        PracticeView: {
+            battlefield: components["schemas"]["PracticePermanent"][];
+            /** Format: int32 */
+            bottom_count: number;
+            /** Format: int64 */
+            created_at: number;
+            decked: boolean;
+            exile: components["schemas"]["PracticeCard"][];
+            graveyard: components["schemas"]["PracticeCard"][];
+            hand: components["schemas"]["PracticeCard"][];
+            id: string;
+            land_played: boolean;
+            last_action_origin: components["schemas"]["Origin"];
+            /** Format: int32 */
+            library_count: number;
+            /** Format: int32 */
+            mulligans: number;
+            on_the_play: boolean;
+            origin: components["schemas"]["Origin"];
+            phase: components["schemas"]["PracticePhase"];
+            practice_version: string;
+            replay_version: string;
+            /** Format: int32 */
+            revision: number;
+            rules_mode: string;
+            seed: string;
+            /** Format: int32 */
+            turn: number;
+            /** Format: int64 */
+            updated_at: number;
+            version_id: string;
+            warnings: string[];
+        };
+        /** @enum {string} */
+        PracticeZone: "hand" | "battlefield" | "graveyard" | "exile";
         /** @enum {string} */
         ProbabilityMethod: "hypergeometric" | "multivariate_hypergeometric";
         Problem: {
@@ -1211,6 +1458,26 @@ export interface components {
             phases: string[];
             /** Format: int64 */
             states: number;
+        };
+        VersionPage: {
+            items: components["schemas"]["VersionSummary"][];
+            next_cursor?: string | null;
+        };
+        VersionSummary: {
+            /** Format: int64 */
+            created_at: number;
+            deck_id: string;
+            format: string;
+            id: string;
+            /** Format: int32 */
+            main_count: number;
+            name: string;
+            /** Format: int32 */
+            ordinal: number;
+            origin: components["schemas"]["Origin"];
+            parent_version?: string | null;
+            /** Format: int32 */
+            sideboard_count: number;
         };
         /** @enum {string} */
         Zone: "main" | "sideboard" | "command" | "companion";
@@ -1788,6 +2055,46 @@ export interface operations {
             };
         };
     };
+    deckVersionsList: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionPage"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     systemDiscovery: {
         parameters: {
             query?: never;
@@ -2140,6 +2447,199 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Note"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    practiceList: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+                version_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticePage"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    practiceCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePracticeCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticeView"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    practiceGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticeView"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    practiceAct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PracticeActionCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticeView"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    practiceInputsGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeckSnapshot"];
                 };
             };
             "4XX": {

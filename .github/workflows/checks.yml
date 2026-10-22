@@ -11,7 +11,7 @@ concurrency:
 jobs:
   quality:
     name: Quality gates
-    runs-on: ubuntu-24.04
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -27,10 +27,12 @@ jobs:
             ~/.cargo/git
             target
           key: rust-quality-${{ runner.os }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: rust-quality-${{ runner.os }}-
       - run: cargo install cargo-llvm-cov --version 0.8.5 --locked
       - run: pnpm verify
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+      - run: pnpm test:site
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
@@ -53,6 +55,36 @@ jobs:
           node-version-file: .node-version
       - run: npm install --global pnpm@10.33.2
       - run: pnpm install --frozen-lockfile
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+        id: native-cache
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: rust-native-${{ matrix.os }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: rust-native-${{ matrix.os }}-
+      - run: cargo test --workspace --no-run --locked
+        id: native-compile
       - run: cargo test --workspace --locked
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
-      - run: pnpm --filter @alkemyst/desktop build
+      - run: pnpm native:build
+      - run: pnpm --filter @alkemyst/desktop native:smoke
+      - name: Diagnose Windows loader imports
+        if: failure() && runner.os == 'Windows' && steps.native-compile.outcome == 'success'
+        shell: pwsh
+        run: ./scripts/windows-loader-report.ps1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: failure() && runner.os == 'Windows'
+        with:
+          name: windows-loader-report
+          path: work/windows-loader/
+          retention-days: 14
+      - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+        if: always() && steps.native-compile.outcome == 'success' && steps.native-cache.outputs.cache-hit != 'true'
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: rust-native-${{ matrix.os }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}

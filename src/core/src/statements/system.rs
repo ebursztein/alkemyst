@@ -1,0 +1,9 @@
+//! Internal storage maintenance statements, outside domain query accounting.
+pub const SCHEMA_VERSION: &str = "PRAGMA user_version";
+pub const CONFIGURE: &str =
+    "PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;";
+pub const INITIAL: &str = include_str!("../../migrations/001_initial.sql");
+
+pub const REVISIONS: &str = "SELECT table_name, revision FROM table_revisions";
+pub const BUMP_REVISION: &str = "INSERT INTO table_revisions(table_name, revision) VALUES (?1, 1)
+    ON CONFLICT(table_name) DO UPDATE SET revision = revision + 1";

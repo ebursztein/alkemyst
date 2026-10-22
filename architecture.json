@@ -1,6 +1,10 @@
 {
   "maxLines": 300,
-  "exemptions": ["src/sdk/src/generated/schema.d.ts", "src/sdk/schema/openapi.json"],
+  "exemptions": [
+    "src/sdk/src/generated/schema.d.ts",
+    "src/sdk/schema/openapi.json",
+    "src/core/tests/fixtures/arena-game.txt"
+  ],
   "packages": {
     "desktop": ["sdk"],
     "sdk": [],

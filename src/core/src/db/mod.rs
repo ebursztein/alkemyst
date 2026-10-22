@@ -30,6 +30,7 @@ pub struct Write {
 #[derive(Clone, Debug, Default, serde::Serialize)]
 pub struct Metrics {
     pub read_calls: u64,
+    pub source_reads: u64,
     pub statements: u64,
     pub cache_hits: u64,
     pub failed_transactions: u64,

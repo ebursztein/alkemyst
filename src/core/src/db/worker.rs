@@ -23,12 +23,22 @@ impl Worker {
         connection.busy_timeout(Duration::from_secs(5))?;
         connection.execute_batch(system::CONFIGURE)?;
         let version: i64 = connection.query_row(system::SCHEMA_VERSION, [], |row| row.get(0))?;
-        if version > 1 {
+        if version > 3 {
             return Err(Error::FutureSchema);
         }
         if version == 0 {
             let transaction = connection.transaction()?;
             transaction.execute_batch(system::INITIAL)?;
+            transaction.commit()?;
+        }
+        if version < 2 {
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(system::CATALOG)?;
+            transaction.commit()?;
+        }
+        if version < 3 {
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(system::ARENA_ALIASES)?;
             transaction.commit()?;
         }
         let table_revisions = connection
@@ -58,7 +68,7 @@ impl Worker {
             return Ok(rows);
         }
         let start = Instant::now();
-        let rows = self.query(query, bindings);
+        let rows = query_rows(&self.connection, query, bindings);
         self.metrics.statements += 1;
         self.metrics.query_microseconds += start.elapsed().as_micros().min(u64::MAX as u128) as u64;
         if start.elapsed() >= Duration::from_millis(50) {
@@ -71,18 +81,13 @@ impl Worker {
         Ok(rows)
     }
 
-    fn query(&mut self, query: Statement, bindings: Vec<Binding>) -> Result<Vec<Value>> {
-        let mut prepared = self.connection.prepare_cached(query.sql)?;
-        if !prepared.readonly() {
-            return Err(Error::NotReadOnly);
-        }
-        let mut cursor = prepared.query(params_from_iter(bindings))?;
-        let mut rows = Vec::new();
-        while let Some(row) = cursor.next()? {
-            let encoded: String = row.get(0)?;
-            rows.push(serde_json::from_str(&encoded)?);
-        }
-        Ok(rows)
+    pub fn read_source(&mut self, path: &Path, statement: Statement) -> Result<Vec<Value>> {
+        self.metrics.source_reads += 1;
+        let connection = Connection::open_with_flags(
+            path,
+            rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY | rusqlite::OpenFlags::SQLITE_OPEN_NO_MUTEX,
+        )?;
+        query_rows(&connection, statement, vec![])
     }
 
     pub fn write(&mut self, writes: Vec<Write>) -> Result<()> {
@@ -166,4 +171,22 @@ fn bindings<'a>(params: impl Iterator<Item = &'a Value>) -> Result<Vec<Binding>>
             _ => Err(Error::Binding),
         })
         .collect()
+}
+
+fn query_rows(
+    connection: &Connection,
+    query: Statement,
+    bindings: Vec<Binding>,
+) -> Result<Vec<Value>> {
+    let mut prepared = connection.prepare_cached(query.sql)?;
+    if !prepared.readonly() {
+        return Err(Error::NotReadOnly);
+    }
+    let mut cursor = prepared.query(params_from_iter(bindings))?;
+    let mut rows = Vec::new();
+    while let Some(row) = cursor.next()? {
+        let encoded: String = row.get(0)?;
+        rows.push(serde_json::from_str(&encoded)?);
+    }
+    Ok(rows)
 }

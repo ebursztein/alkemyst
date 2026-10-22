@@ -1346,6 +1346,380 @@
         }
       }
     },
+    "/v1/probabilities/draw": {
+      "post": {
+        "tags": [
+          "probabilities"
+        ],
+        "summary": "Exact finite-deck draw probability without replacement. This is not a\nbattlefield, tutor, mulligan or Arena smoothing model.",
+        "operationId": "probabilityDraw",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DrawProbability"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExactProbability"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/probabilities/joint": {
+      "post": {
+        "tags": [
+          "probabilities"
+        ],
+        "summary": "Exact joint draw probability across mutually exclusive categories covering\nthe whole deck. Split overlapping groups into intersection categories first.",
+        "operationId": "probabilityJoint",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JointProbability"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExactProbability"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulations": {
+      "get": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "List persisted simulation jobs in stable creation order using opaque cursors.",
+        "operationId": "simulationsList",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 40,
+              "maximum": 100,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPage"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "Queue a seeded local simulation. Inputs and model versions are frozen before\nexecution; retries with the same key return the original job.",
+        "operationId": "simulationsCreate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSimulationCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationJob"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulations/{id}": {
+      "get": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "Read durable progress and results. A missing report means no completed trials.",
+        "operationId": "simulationGet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationJob"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulations/{id}/cancel": {
+      "post": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "Request cancellation. Bounded batches preserve completed-trial denominators;\ncancelling an already terminal job is an idempotent read of its final state.",
+        "operationId": "simulationCancel",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationJob"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulations/{id}/inputs": {
+      "get": {
+        "tags": [
+          "simulations"
+        ],
+        "summary": "Read the frozen card metadata and parameters used by a job, not today's catalog.",
+        "operationId": "simulationInputsGet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationInputs"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/statistics": {
       "get": {
         "tags": [
@@ -1724,6 +2098,36 @@
           }
         }
       },
+      "Category": {
+        "type": "object",
+        "required": [
+          "label",
+          "population",
+          "min",
+          "max"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "max": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "min": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "population": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
       "Counts": {
         "type": "object",
         "required": [
@@ -1827,6 +2231,22 @@
         },
         "additionalProperties": false
       },
+      "CreateSimulationCommand": {
+        "type": "object",
+        "required": [
+          "idempotency_key",
+          "input"
+        ],
+        "properties": {
+          "idempotency_key": {
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/components/schemas/SimulationParameters"
+          }
+        },
+        "additionalProperties": false
+      },
       "CreateVersionCommand": {
         "type": "object",
         "required": [
@@ -1902,6 +2322,59 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "DeckSnapshot": {
+        "type": "object",
+        "required": [
+          "version_id",
+          "deck_id",
+          "name",
+          "format",
+          "counts",
+          "curve",
+          "cards"
+        ],
+        "properties": {
+          "cards": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResolvedCard"
+            }
+          },
+          "catalog_snapshot": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "catalog_updated_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "counts": {
+            "$ref": "#/components/schemas/Counts"
+          },
+          "curve": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CurveBin"
+            }
+          },
+          "deck_id": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "version_id": {
+            "type": "string"
           }
         }
       },
@@ -2024,6 +2497,44 @@
           }
         }
       },
+      "DrawProbability": {
+        "type": "object",
+        "required": [
+          "population",
+          "successes",
+          "draws",
+          "min",
+          "max"
+        ],
+        "properties": {
+          "draws": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "max": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "min": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "population": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "successes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
       "ErrorCode": {
         "type": "string",
         "enum": [
@@ -2033,9 +2544,71 @@
           "not_found",
           "conflict",
           "unresolved_cards",
+          "unsupported_model",
           "busy",
           "internal"
         ]
+      },
+      "Estimate": {
+        "type": "object",
+        "description": "Wilson score interval, with explicit numerator and denominator.",
+        "required": [
+          "successes",
+          "samples",
+          "probability",
+          "interval95"
+        ],
+        "properties": {
+          "interval95": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "probability": {
+            "type": "number",
+            "format": "double"
+          },
+          "samples": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "successes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "ExactProbability": {
+        "type": "object",
+        "required": [
+          "probability",
+          "population",
+          "draws",
+          "method"
+        ],
+        "properties": {
+          "draws": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "method": {
+            "$ref": "#/components/schemas/ProbabilityMethod"
+          },
+          "population": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "probability": {
+            "type": "number",
+            "format": "double"
+          }
+        }
       },
       "GamePage": {
         "type": "object",
@@ -2208,6 +2781,29 @@
           }
         }
       },
+      "Goal": {
+        "type": "object",
+        "required": [
+          "equipment",
+          "attached",
+          "attack_ready"
+        ],
+        "properties": {
+          "attached": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "attack_ready": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "equipment": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
       "ImportDeck": {
         "type": "object",
         "required": [
@@ -2276,6 +2872,60 @@
           "activated_ability_excluded",
           "ignored_card"
         ]
+      },
+      "JobPage": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SimulationJob"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "JobStatus": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "running",
+          "cancelling",
+          "completed",
+          "cancelled",
+          "failed",
+          "interrupted"
+        ]
+      },
+      "JointProbability": {
+        "type": "object",
+        "required": [
+          "draws",
+          "categories"
+        ],
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            },
+            "description": "Mutually exclusive categories covering the whole deck, including other cards.\nSplit overlapping groups into explicit intersections before using this model."
+          },
+          "draws": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
       },
       "MatchMode": {
         "type": "string",
@@ -2366,6 +3016,51 @@
           "conflicting_result",
           "outcome"
         ]
+      },
+      "ModelScope": {
+        "type": "string",
+        "enum": [
+          "precombat_goldfish"
+        ]
+      },
+      "MulliganParameters": {
+        "type": "object",
+        "required": [
+          "minimum_keep",
+          "force_mulligans",
+          "min_lands",
+          "max_lands",
+          "required_references"
+        ],
+        "properties": {
+          "force_mulligans": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "max_lands": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "min_lands": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "minimum_keep": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "required_references": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
       },
       "NewNote": {
         "type": "object",
@@ -2489,6 +3184,13 @@
           "agent",
           "arena",
           "import"
+        ]
+      },
+      "ProbabilityMethod": {
+        "type": "string",
+        "enum": [
+          "hypergeometric",
+          "multivariate_hypergeometric"
         ]
       },
       "Problem": {
@@ -2625,6 +3327,28 @@
         },
         "additionalProperties": false
       },
+      "ResolvedCard": {
+        "type": "object",
+        "required": [
+          "reference",
+          "quantity",
+          "zone"
+        ],
+        "properties": {
+          "data": {},
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "reference": {
+            "type": "string"
+          },
+          "zone": {
+            "$ref": "#/components/schemas/Zone"
+          }
+        }
+      },
       "SampleBreakdown": {
         "type": "object",
         "required": [
@@ -2723,6 +3447,239 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "SimulationInputs": {
+        "type": "object",
+        "required": [
+          "snapshot",
+          "profile",
+          "parameters"
+        ],
+        "properties": {
+          "parameters": {
+            "$ref": "#/components/schemas/SimulationParameters"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/Profile"
+          },
+          "snapshot": {
+            "$ref": "#/components/schemas/DeckSnapshot"
+          }
+        }
+      },
+      "SimulationJob": {
+        "type": "object",
+        "required": [
+          "id",
+          "version_id",
+          "status",
+          "origin",
+          "created_at",
+          "updated_at",
+          "requested_runs",
+          "completed_runs",
+          "seed",
+          "compiler_version",
+          "model_version",
+          "policy_version",
+          "replay_version",
+          "parameters"
+        ],
+        "properties": {
+          "cancellation_origin": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Origin"
+              }
+            ]
+          },
+          "catalog_snapshot": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "compiler_version": {
+            "type": "string"
+          },
+          "completed_runs": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "error_code": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "model_version": {
+            "type": "string"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/Origin"
+          },
+          "parameters": {
+            "$ref": "#/components/schemas/SimulationParameters"
+          },
+          "policy_version": {
+            "type": "string"
+          },
+          "replay_version": {
+            "type": "string"
+          },
+          "report": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SimulationReport"
+              }
+            ]
+          },
+          "requested_runs": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "seed": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "updated_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "version_id": {
+            "type": "string"
+          }
+        }
+      },
+      "SimulationParameters": {
+        "type": "object",
+        "required": [
+          "version_id",
+          "runs",
+          "turns",
+          "on_the_play",
+          "scope",
+          "goal",
+          "mulligan"
+        ],
+        "properties": {
+          "goal": {
+            "$ref": "#/components/schemas/Goal"
+          },
+          "mulligan": {
+            "$ref": "#/components/schemas/MulliganParameters"
+          },
+          "on_the_play": {
+            "type": "boolean"
+          },
+          "runs": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 1000000,
+            "minimum": 1
+          },
+          "scope": {
+            "$ref": "#/components/schemas/ModelScope"
+          },
+          "seed": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Full-width hexadecimal seed. Omit to generate and persist a random seed.",
+            "pattern": "^[0-9a-fA-F]{16}$"
+          },
+          "turns": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 30,
+            "minimum": 1
+          },
+          "version_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SimulationReport": {
+        "type": "object",
+        "required": [
+          "requested_runs",
+          "completed_runs",
+          "seed",
+          "replay_version",
+          "model_version",
+          "policy",
+          "goal",
+          "mean_opening_size",
+          "mean_mulligans",
+          "forced_keeps",
+          "turns"
+        ],
+        "properties": {
+          "completed_runs": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "forced_keeps": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "goal": {
+            "$ref": "#/components/schemas/Goal"
+          },
+          "mean_mulligans": {
+            "type": "number",
+            "format": "double"
+          },
+          "mean_opening_size": {
+            "type": "number",
+            "format": "double"
+          },
+          "model_version": {
+            "type": "string"
+          },
+          "policy": {
+            "type": "string"
+          },
+          "replay_version": {
+            "type": "string"
+          },
+          "requested_runs": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "seed": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
+          },
+          "turns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TurnEstimate"
+            }
           }
         }
       },
@@ -2977,6 +3934,82 @@
           "through_ordinal": {
             "type": "integer",
             "format": "int64"
+          }
+        }
+      },
+      "TurnEstimate": {
+        "type": "object",
+        "required": [
+          "turn",
+          "equipment",
+          "attached",
+          "attack_ready",
+          "joint",
+          "mean_equipment",
+          "mean_creatures",
+          "mean_cards_drawn",
+          "mean_cards_discarded",
+          "story_samples",
+          "mean_legendary_bricks",
+          "mean_life",
+          "mean_tutors_cast",
+          "decked"
+        ],
+        "properties": {
+          "attached": {
+            "$ref": "#/components/schemas/Estimate"
+          },
+          "attack_ready": {
+            "$ref": "#/components/schemas/Estimate"
+          },
+          "decked": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "equipment": {
+            "$ref": "#/components/schemas/Estimate"
+          },
+          "joint": {
+            "$ref": "#/components/schemas/Estimate"
+          },
+          "mean_cards_discarded": {
+            "type": "number",
+            "format": "double"
+          },
+          "mean_cards_drawn": {
+            "type": "number",
+            "format": "double"
+          },
+          "mean_creatures": {
+            "type": "number",
+            "format": "double"
+          },
+          "mean_equipment": {
+            "type": "number",
+            "format": "double"
+          },
+          "mean_legendary_bricks": {
+            "type": "number",
+            "format": "double"
+          },
+          "mean_life": {
+            "type": "number",
+            "format": "double"
+          },
+          "mean_tutors_cast": {
+            "type": "number",
+            "format": "double"
+          },
+          "story_samples": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "turn": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
           }
         }
       },

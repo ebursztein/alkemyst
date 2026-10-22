@@ -15,6 +15,7 @@ pub enum ErrorCode {
     NotFound,
     Conflict,
     UnresolvedCards,
+    UnsupportedModel,
     Busy,
     Internal,
 }
@@ -156,6 +157,33 @@ impl From<crate::analysis::Error> for ApiError {
         match error {
             crate::analysis::Error::Database(error) => error.into(),
             crate::analysis::Error::Invalid(message) => Self::invalid(message),
+            crate::analysis::Error::Conflict => Self::new(
+                StatusCode::CONFLICT,
+                ErrorCode::Conflict,
+                "Idempotency key already used",
+            ),
+            crate::analysis::Error::QueueFull => Self::new(
+                StatusCode::TOO_MANY_REQUESTS,
+                ErrorCode::Busy,
+                "Simulation queue is full",
+            ),
+            crate::analysis::Error::NotFound => Self::missing(),
+            crate::analysis::Error::Unsupported => Self::new(
+                StatusCode::UNPROCESSABLE_ENTITY,
+                ErrorCode::UnsupportedModel,
+                "Deck has missing or unsupported model inputs",
+            ),
+            crate::analysis::Error::Stopped => Self::new(
+                StatusCode::SERVICE_UNAVAILABLE,
+                ErrorCode::Busy,
+                "Simulation worker is stopping",
+            ),
+            crate::analysis::Error::Model(_) => Self::invalid("Invalid simulation configuration"),
+            crate::analysis::Error::Stored => Self::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ErrorCode::Internal,
+                "Invalid stored simulation state",
+            ),
             crate::analysis::Error::Json(_) => Self::new(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 ErrorCode::Internal,

@@ -13,7 +13,7 @@ pub struct Scenario {
     pub mulligan: London,
     pub goal: Goal,
 }
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct TurnEstimate {
     pub turn: u8,
     pub equipment: Estimate,
@@ -30,14 +30,16 @@ pub struct TurnEstimate {
     pub mean_tutors_cast: f64,
     pub decked: u32,
 }
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct SimulationReport {
     pub requested_runs: u32,
     pub completed_runs: u32,
+    #[serde(with = "super::seed")]
+    #[schema(value_type=String,pattern="^[0-9a-f]{16}$")]
     pub seed: u64,
-    pub replay_version: &'static str,
-    pub model_version: &'static str,
-    pub policy: &'static str,
+    pub replay_version: String,
+    pub model_version: String,
+    pub policy: String,
     pub goal: Goal,
     pub mean_opening_size: f64,
     pub mean_mulligans: f64,
@@ -198,9 +200,9 @@ impl BattlefieldRunner {
             requested_runs: self.runs,
             completed_runs: self.completed,
             seed: self.seed,
-            replay_version: REPLAY_VERSION,
-            model_version: MODEL_VERSION,
-            policy: POLICY,
+            replay_version: REPLAY_VERSION.into(),
+            model_version: MODEL_VERSION.into(),
+            policy: POLICY.into(),
             goal: self.scenario.goal,
             mean_opening_size: self.opening_sum as f64 / n,
             mean_mulligans: self.mulligan_sum as f64 / n,

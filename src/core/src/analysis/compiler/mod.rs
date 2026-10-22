@@ -21,6 +21,7 @@ pub struct CompiledDeck {
     pub profile: Profile,
     models: Arc<[CardSpec]>,
     snapshot: DeckSnapshot,
+    ref_ids: BTreeMap<String, u32>,
 }
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -50,6 +51,7 @@ pub fn compile(snapshot: DeckSnapshot) -> CompiledDeck {
         .map(|(i, k)| (k, (i + 1) as u32))
         .collect::<BTreeMap<_, _>>();
     let mut models = vec![];
+    let mut ref_ids = BTreeMap::new();
     let mut cards = vec![];
     for input in &snapshot.cards {
         let name = input.data.as_ref().and_then(|v| {
@@ -65,6 +67,7 @@ pub fn compile(snapshot: DeckSnapshot) -> CompiledDeck {
         if input.zone == Zone::Main
             && let Some(model) = model
         {
+            ref_ids.insert(input.reference.clone(), id);
             models.extend(std::iter::repeat_n(model, usize::from(input.quantity)));
         }
         cards.push(profile);
@@ -100,9 +103,13 @@ pub fn compile(snapshot: DeckSnapshot) -> CompiledDeck {
         profile,
         models: Arc::from(models),
         snapshot: original,
+        ref_ids,
     }
 }
 impl CompiledDeck {
+    pub fn identity(&self, reference: &str) -> Option<u32> {
+        self.ref_ids.get(reference).copied()
+    }
     pub fn snapshot(&self) -> &DeckSnapshot {
         &self.snapshot
     }

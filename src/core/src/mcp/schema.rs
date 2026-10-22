@@ -5,6 +5,13 @@ use utoipa::OpenApi;
 
 // Adding a REST endpoint never grants an agent a new capability implicitly.
 pub const ALLOWLIST: &[&str] = &[
+    "simulationsCreate",
+    "simulationsList",
+    "simulationGet",
+    "simulationInputsGet",
+    "simulationCancel",
+    "probabilityDraw",
+    "probabilityJoint",
     "analysisProfileGet",
     "gamesList",
     "gameGet",
@@ -81,11 +88,26 @@ pub fn from_openapi(document: &Value) -> Vec<Tool> {
                     .to_owned(),
                 input.as_object().expect("object schema").clone(),
             );
-            let mut output = json!({"type":"object","properties":{"data":operation["responses"]["200"]["content"]["application/json"]["schema"]},"required":["data"],"additionalProperties":false});
+            let success = operation["responses"]
+                .as_object()
+                .expect("OpenAPI responses")
+                .iter()
+                .filter(|(status, _)| status.starts_with('2'))
+                .map(|(_, response)| &response["content"]["application/json"]["schema"])
+                .find(|schema| !schema.is_null())
+                .expect("Allowed tools need a successful JSON response");
+            let mut output = json!({"type":"object","properties":{"data":success},"required":["data"],"additionalProperties":false});
             localize(&mut output, document);
             tool.output_schema = Some(std::sync::Arc::new(output.as_object().unwrap().clone()));
             let read_only = method == "get"
-                || ["cardsSearch", "cardsResolveArena", "cardsResolveReferences"].contains(&id);
+                || [
+                    "cardsSearch",
+                    "cardsResolveArena",
+                    "cardsResolveReferences",
+                    "probabilityDraw",
+                    "probabilityJoint",
+                ]
+                .contains(&id);
             let mut annotations = ToolAnnotations::default();
             annotations.read_only_hint = Some(read_only);
             annotations.destructive_hint = Some(false);

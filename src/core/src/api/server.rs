@@ -5,6 +5,7 @@ use tokio::{sync::oneshot, task::JoinHandle};
 
 pub struct RunningServer {
     address: SocketAddr,
+    analysis: crate::analysis::Analysis,
     mcp_stop: tokio_util::sync::CancellationToken,
     shutdown: Option<oneshot::Sender<()>>,
     task: Option<JoinHandle<io::Result<()>>>,
@@ -27,6 +28,8 @@ impl RunningServer {
         let (shutdown, stopped) = oneshot::channel();
         let config = rmcp::transport::streamable_http_server::StreamableHttpServerConfig::default();
         let mcp_stop = config.cancellation_token.clone();
+        let analysis = app.analysis.clone();
+        analysis.start_jobs().await.map_err(io::Error::other)?;
         let routes = router_with_mcp(app, auth, config);
         let task = tokio::spawn(async move {
             axum::serve(listener, routes)
@@ -37,6 +40,7 @@ impl RunningServer {
         });
         Ok(Self {
             address,
+            analysis,
             mcp_stop,
             shutdown: Some(shutdown),
             task: Some(task),
@@ -50,10 +54,12 @@ impl RunningServer {
         if let Some(task) = self.task.take() {
             task.await.map_err(io::Error::other)??;
         }
+        self.analysis.stop_jobs().await.map_err(io::Error::other)?;
         Ok(())
     }
     fn signal(&mut self) {
         self.mcp_stop.cancel();
+        self.analysis.signal_jobs_stop();
         if let Some(shutdown) = self.shutdown.take() {
             let _ = shutdown.send(());
         }

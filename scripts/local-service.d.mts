@@ -7,4 +7,5 @@ export function startLocalService(options?: {
   database?: string;
   coverage?: boolean;
   history?: boolean;
+  analysis?: boolean;
 }): Promise<LocalService>;

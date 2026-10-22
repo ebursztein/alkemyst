@@ -11,10 +11,25 @@ pub enum Error {
     Json(#[from] serde_json::Error),
     #[error("invalid analysis request: {0}")]
     Invalid(&'static str),
+    #[error("idempotency key was already used for a different request")]
+    Conflict,
+    #[error("simulation queue is full")]
+    QueueFull,
+    #[error("requested simulation or version does not exist")]
+    NotFound,
+    #[error("deck has missing or unsupported model inputs")]
+    Unsupported,
+    #[error("simulation worker is stopping")]
+    Stopped,
+    #[error("stored simulation state is inconsistent")]
+    Stored,
+    #[error(transparent)]
+    Model(#[from] landlord::Error),
 }
 #[derive(Clone)]
 pub struct Analysis {
-    db: Engine,
+    pub(super) db: Engine,
+    pub(super) coordinator: std::sync::Arc<super::jobs::Coordinator>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, ToSchema)]
 pub struct DeckSnapshot {
@@ -52,7 +67,10 @@ pub struct ResolvedCard {
 }
 impl Analysis {
     pub fn new(db: Engine) -> Self {
-        Self { db }
+        Self {
+            db,
+            coordinator: std::sync::Arc::new(super::jobs::Coordinator::new()),
+        }
     }
     /// Exactly one prepared statement performs resolution and relational aggregation.
     pub async fn snapshot(&self, version_id: &str) -> Result<Option<DeckSnapshot>, Error> {

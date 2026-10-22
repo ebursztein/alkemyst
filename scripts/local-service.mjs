@@ -9,7 +9,12 @@ import { gzipSync } from "node:zlib";
 const execute = promisify(execFile);
 const token = "test-only-local-api-credential-with-at-least-32-characters";
 
-export async function startLocalService({ database, coverage = false, history = false } = {}) {
+export async function startLocalService({
+  database,
+  coverage = false,
+  history = false,
+  analysis = false,
+} = {}) {
   const directory = database ? undefined : await mkdtemp(join(tmpdir(), "alkemyst-sdk-"));
   const path = database ?? join(directory, "catalog.sqlite3");
   let child;
@@ -17,7 +22,21 @@ export async function startLocalService({ database, coverage = false, history = 
   try {
     if (directory) {
       const archive = join(directory, "cards.jsonl.gz");
-      await writeFile(archive, gzipSync(await readFile("src/core/tests/fixtures/cards.jsonl")));
+      const fixture = analysis
+        ? JSON.parse(await readFile("src/core/tests/fixtures/boros-equipment.json", "utf8"))
+            .cards.map(({ card }) =>
+              JSON.stringify({
+                ...card,
+                id: `test-${card.oracle_id}`,
+                object: "card",
+                lang: "en",
+                released_at: "2026-01-01",
+                color_identity: card.colors ?? [],
+              }),
+            )
+            .join("\n")
+        : await readFile("src/core/tests/fixtures/cards.jsonl");
+      await writeFile(archive, gzipSync(fixture));
       await execute(
         "cargo",
         [

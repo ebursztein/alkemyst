@@ -49,6 +49,6 @@ window, ingest a sanitized game, initialize MCP, then Quit and verify HTTP stopp
 The smoke feature is test infrastructure and is excluded from release builds.
 
 Coverage includes the native build script and real-window smoke test. Native
-packaging and Windows GUI verification remain in progress. The new dependency lockfile currently fails OSV on Linux-only Tauri
-transitives; remediation is tracked in Sprinty S05-008. No preview installer is
+packaging and Windows GUI verification remain in progress. Linux-only Tauri transitives have exact, expiring OSV exceptions with automated
+target-exclusion checks; see the root SECURITY.md and Sprinty S05-008. No preview installer is
 published, and stable signing/notarization remains a release prerequisite.

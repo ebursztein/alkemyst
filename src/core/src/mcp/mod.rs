@@ -1,4 +1,3 @@
-mod operations;
 pub mod schema;
 use crate::Application;
 use rmcp::{
@@ -15,7 +14,6 @@ use std::sync::Arc;
 struct Handler {
     app: Application,
     tools: Arc<Vec<Tool>>,
-    validators: Arc<std::collections::BTreeMap<String, jsonschema::Validator>>,
 }
 
 pub(crate) fn service(
@@ -28,20 +26,9 @@ pub(crate) fn service(
     config.json_response = true;
     config.max_request_body_bytes = 1024 * 1024;
     let tools = schema::tools();
-    let validators = tools
-        .iter()
-        .map(|tool| {
-            let input = serde_json::Value::Object(tool.input_schema.as_ref().clone());
-            (
-                tool.name.to_string(),
-                jsonschema::validator_for(&input).expect("Valid OpenAPI tool schema"),
-            )
-        })
-        .collect();
     let handler = Handler {
         app,
         tools: Arc::new(tools),
-        validators: Arc::new(validators),
     };
     StreamableHttpService::new(
         move || Ok(handler.clone()),
@@ -83,16 +70,7 @@ impl ServerHandler for Handler {
             ));
         }
         let args = serde_json::Value::Object(request.arguments.unwrap_or_default());
-        if !self.validators[request.name.as_ref()].is_valid(&args) {
-            let error = crate::api::problem::ApiError::invalid(
-                "Arguments do not match the tool input schema",
-            );
-            return Ok(CallToolResult::structured_error(
-                serde_json::to_value(error.problem).expect("Problem serialization"),
-            )
-            .into());
-        }
-        let result = match operations::invoke(&self.app, &request.name, args).await {
+        let result = match self.app.invoke_agent(&request.name, args).await {
             Ok(value) => CallToolResult::structured(value),
             Err(error) => CallToolResult::structured_error(
                 serde_json::to_value(error.problem).expect("Problem serialization"),

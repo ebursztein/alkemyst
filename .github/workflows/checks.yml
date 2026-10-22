@@ -27,6 +27,7 @@ jobs:
             ~/.cargo/git
             target
           key: rust-quality-${{ runner.os }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: rust-quality-${{ runner.os }}-
       - run: cargo install cargo-llvm-cov --version 0.8.5 --locked
       - run: pnpm verify
       - run: pnpm exec playwright install --with-deps chromium
@@ -61,6 +62,7 @@ jobs:
             ~/.cargo/git
             target
           key: rust-native-${{ matrix.os }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: rust-native-${{ matrix.os }}-
       - run: cargo test --workspace --no-run --locked
         id: native-compile
       - run: cargo test --workspace --locked

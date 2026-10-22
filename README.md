@@ -9,7 +9,7 @@ Automatic match capture, deck versions, mana analysis, and local MCP access.
 
 ## Development
 
-Requirements: Node 24.14.1, pnpm 10.33.2, Rust 1.95.0.
+Requirements: Node 24.16.0, pnpm 10.33.2, Rust 1.95.0.
 
 ```sh
 pnpm install --frozen-lockfile

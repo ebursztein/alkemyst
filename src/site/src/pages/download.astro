@@ -1,0 +1,63 @@
+---
+import Marketing from "../layouts/Marketing.astro";
+---
+
+<Marketing
+  title="Download previews — Alkemyst"
+  description="Preview availability, target platforms, and source-build guidance for Alkemyst."
+>
+  <section class="wrap page-intro">
+    <p class="eyebrow">EARLY DEVELOPMENT</p>
+    <h1>Download previews</h1>
+    <p class="lead">Preview installers are not published yet.</p>
+    <p>
+      We are verifying native builds and the window, tray, tracking, and MCP lifecycle before
+      distributing a preview. There is no stable release.
+    </p>
+    <a class="button secondary" href="https://github.com/ebursztein/alkemyst/releases">
+      View GitHub Releases
+    </a>
+  </section>
+  <section class="wrap platform-section" aria-labelledby="platforms-title">
+    <h2 id="platforms-title">Target platforms</h2>
+    <div class="platforms">
+      <article>
+        <p class="eyebrow">MACOS</p>
+        <h3>Apple Silicon</h3>
+        <p>macOS 13 or newer.</p>
+        <p class="status">Installer pending</p>
+      </article>
+      <article>
+        <p class="eyebrow">WINDOWS</p>
+        <h3>64-bit Intel / AMD</h3>
+        <p>Windows 11, x64.</p>
+        <p class="status">Installer pending</p>
+      </article>
+    </div>
+    <p>
+      Check each release’s notes for the platforms actually verified. Linux and Intel Macs are not
+      distribution targets for the initial preview.
+    </p>
+  </section>
+  <section class="wrap page-section">
+    <h2>Build a reviewed revision</h2>
+    <p>
+      Developers can build the app from source with the pinned Node, pnpm and Rust toolchains. Use a
+      reviewed tag or pull-request head; unreleased code may not be on the main branch yet.
+    </p>
+    <a href="/docs/guides/development/">Source-build instructions →</a>
+  </section>
+  <section class="wrap page-section">
+    <h2>When a preview becomes available</h2>
+    <p>
+      Installers and SHA-256 checksums will live on GitHub Releases. Early previews may be unsigned
+      or ad-hoc signed, with their status stated in the release notes. Stable distribution requires
+      trusted signing and macOS notarization.
+    </p>
+    <p>
+      Follow the platform-specific instructions and checksum guidance attached to that exact
+      release.
+    </p>
+    <a href="/docs/setup/">Setup and local-data guidance →</a>
+  </section>
+</Marketing>

@@ -189,3 +189,12 @@ use explicit observed counters and report their sample count.
 `local_time` is a zone-less first observed game clock. `match_instant_utc` is
 explicit match-clock evidence, not a reconstructed game-start timestamp. Event
 `instant_utc` values exist only where the source supplies an actual UTC instant.
+
+## Deck analysis profiles
+
+`GET /v1/deck-versions/{id}/analysis` (`analysisProfileGet` in MCP) returns the
+printed mana curve, source counts, catalog/compiler versions and per-card model
+support. The generated SDK exposes the same operation. Missing cards and unknown
+rules remain explicit even when curves can be displayed. The compiler keeps the
+resolved immutable input for subsequent simulation jobs; persisted job operations
+are the next backend slice. See [compiler boundaries](src/core/src/analysis/compiler/README.md).

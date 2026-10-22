@@ -9,6 +9,7 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
+sha2 = "=0.11.1"
 landlord = { path = "../landlord" }
 tempfile = "=3.27.0"
 flate2 = "=1.1.10"

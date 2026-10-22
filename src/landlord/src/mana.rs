@@ -31,6 +31,10 @@ impl Color {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Source(u8);
 impl Source {
+    pub fn supports(self, color: Color) -> bool {
+        self.0 & color.mask() != 0
+    }
+
     /// Alternative colors from one physical source, still producing one unit.
     pub fn union(self, other: Self) -> Self {
         Self(self.0 | other.0)

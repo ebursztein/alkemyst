@@ -36,6 +36,7 @@ pub(crate) fn discover() -> Discovery {
         local_only: true,
         capabilities: vec![
             "cards",
+            "analysis",
             "decks",
             "versions",
             "notes",

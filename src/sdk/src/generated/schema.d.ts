@@ -152,6 +152,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/deck-versions/{id}/analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Analyze an immutable deck version using the current local catalog. Printed
+         *     curves remain available when missing or unsupported rules block simulation.
+         */
+        get: operations["analysisProfileGet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/deck-versions/{id}/arena": {
         parameters: {
             query?: never;
@@ -417,6 +437,18 @@ export interface components {
             items: components["schemas"]["CardSummary"][];
             next_cursor?: string | null;
         };
+        CardProfile: {
+            adventure_cost?: string | null;
+            cast_cost?: string | null;
+            equip_cost?: string | null;
+            issues: components["schemas"]["Issue"][];
+            name?: string | null;
+            oracle_id?: string | null;
+            /** Format: int32 */
+            quantity: number;
+            reference: string;
+            zone: components["schemas"]["Zone"];
+        };
         CardSummary: {
             arena_available: boolean;
             color_identity: string[];
@@ -444,6 +476,22 @@ export interface components {
             snapshot_id?: string | null;
             source?: null | components["schemas"]["CatalogSource"];
         };
+        Counts: {
+            /** Format: int32 */
+            creatures: number;
+            /** Format: int32 */
+            equipment: number;
+            /** Format: int32 */
+            lands: number;
+            /** Format: int32 */
+            legendary: number;
+            /** Format: int32 */
+            main: number;
+            /** Format: int32 */
+            sideboard: number;
+            /** Format: int32 */
+            unresolved_main: number;
+        };
         CreateDeck: {
             cards: components["schemas"]["DeckCard"][];
             format: string;
@@ -460,6 +508,12 @@ export interface components {
         CreateVersionCommand: {
             idempotency_key: string;
             input: components["schemas"]["NewVersion"];
+        };
+        CurveBin: {
+            /** Format: double */
+            mana_value?: number | null;
+            /** Format: int32 */
+            quantity: number;
         };
         DeckCard: {
             /** Format: int32 */
@@ -557,6 +611,13 @@ export interface components {
             idempotency_key: string;
             input: components["schemas"]["ImportDeck"];
         };
+        Issue: {
+            blocking: boolean;
+            code: components["schemas"]["IssueCode"];
+            detail: string;
+        };
+        /** @enum {string} */
+        IssueCode: "missing_card" | "invalid_metadata" | "unsupported_cost" | "unknown_rules" | "rules_changed" | "unsupported_layout" | "combat_excluded" | "recursion_excluded" | "activated_ability_excluded" | "ignored_card";
         /** @enum {string} */
         MatchMode: "bo1" | "bo3" | "unknown";
         MatchPage: {
@@ -610,6 +671,23 @@ export interface components {
             message: string;
             unresolved?: string[] | null;
         };
+        Profile: {
+            assumptions: string[];
+            can_simulate: boolean;
+            cards: components["schemas"]["CardProfile"][];
+            catalog_snapshot?: string | null;
+            catalog_updated_at?: string | null;
+            compiler_version: string;
+            counts: components["schemas"]["Counts"];
+            curve: components["schemas"]["CurveBin"][];
+            deck_id: string;
+            format: string;
+            model_version: string;
+            name: string;
+            policy_version: string;
+            sources: components["schemas"]["SourceCount"][];
+            version_id: string;
+        };
         ReferenceResolution: {
             card?: unknown;
             reference: string;
@@ -644,6 +722,24 @@ export interface components {
             /** @description Plain text tokens across names, rules text and types. Not raw FTS syntax. */
             text?: string;
             type_line?: string | null;
+        };
+        SourceCount: {
+            color: string;
+            /**
+             * Format: int32
+             * @description Potential land color depends on board state or spending restriction.
+             */
+            conditional_lands: number;
+            /**
+             * Format: int32
+             * @description Includes summoning-sick or restricted creature/artifact mana abilities.
+             */
+            nonland_sources: number;
+            /**
+             * Format: int32
+             * @description Color always available once untapped, with no spending restriction.
+             */
+            unrestricted_lands: number;
         };
         Statistics: {
             by_mode: components["schemas"]["SampleBreakdown"][];
@@ -1076,6 +1172,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeckVersion"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    analysisProfileGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
                 };
             };
             "4XX": {

@@ -118,3 +118,11 @@ fn generic_reductions_never_remove_colored_requirements() {
             .is_none()
     );
 }
+
+#[test]
+fn source_color_inspection_does_not_change_payment_capacity() {
+    let s = source(&[Color::White, Color::Red]);
+    assert!(s.supports(Color::White));
+    assert!(s.supports(Color::Red));
+    assert!(!s.supports(Color::Blue));
+}

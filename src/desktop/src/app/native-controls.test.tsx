@@ -53,6 +53,10 @@ it("requires explicit opt-in to launch at login and can pause tracking separatel
       (screen.getByRole("checkbox", { name: "Pause Arena tracking" }) as HTMLInputElement).checked,
     ).toBe(true),
   );
+  await screen.findByText("Arena tracking paused");
+  fireEvent.click(screen.getByRole("checkbox", { name: "Pause Arena tracking" }));
+  await screen.findByText("Following Arena logs");
+  expect(call).toHaveBeenCalledWith("set_tracking_paused", { paused: false });
   fireEvent.click(login);
   await waitFor(() => expect(startup).toBe(false));
   client.clear();
@@ -72,5 +76,18 @@ it("shows read failures with retry and rejects invalid native settings", async (
   fireEvent.click(screen.getByRole("checkbox", { name: "Launch Alkemyst at login" }));
   await screen.findByText("Could not update desktop settings. Try again.");
   expect(screen.queryByText(/private path/)).toBeNull();
+  client.clear();
+});
+
+it("explains unavailable tracking without displaying diagnostic paths", async () => {
+  call.mockResolvedValue({
+    launch_at_login: false,
+    tracking_paused: false,
+    tracking: { state: "degraded", last_error: "private/log/path" },
+  });
+  const client = await mount();
+  await screen.findByText("Arena tracking needs attention");
+  expect(screen.queryByText(/private\/log/)).toBeNull();
+  await screen.findByText(/pause and resume tracking to retry/);
   client.clear();
 });

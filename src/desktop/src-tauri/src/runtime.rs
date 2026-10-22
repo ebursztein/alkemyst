@@ -10,6 +10,7 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 use tokio::sync::Mutex;
+mod card_cache;
 #[derive(Clone)]
 pub enum Tracking {
     Discover,
@@ -39,6 +40,8 @@ pub enum Error {
     Stopped,
     #[error("no backup has been selected for restoration")]
     NoRestore,
+    #[error("card identity worker stopped")]
+    CardWorker,
 }
 pub struct NativeTrackingStatus {
     pub paused: bool,
@@ -49,6 +52,7 @@ struct Services {
     tracking: Option<TrackingTask>,
     paused: bool,
     stopped: bool,
+    cards: Option<crate::card_setup::CardTask>,
 }
 pub struct NativeRuntime {
     app: Application,
@@ -70,6 +74,17 @@ fn start_tracking(app: &Application, source: &Tracking) -> Option<TrackingTask> 
 }
 impl NativeRuntime {
     pub async fn start(options: RuntimeOptions) -> Result<Self, Error> {
+        let sources = if matches!(options.tracking, Tracking::Discover) {
+            crate::CardSources::Discover
+        } else {
+            crate::CardSources::Disabled
+        };
+        Self::start_with_card_sources(options, sources).await
+    }
+    pub async fn start_with_card_sources(
+        options: RuntimeOptions,
+        sources: crate::CardSources,
+    ) -> Result<Self, Error> {
         if let Some(parent) = options
             .database
             .parent()
@@ -101,6 +116,7 @@ impl NativeRuntime {
             token: auth.credential().to_owned(),
         };
         let tracking = start_tracking(&app, &options.tracking);
+        let cards = crate::card_setup::CardTask::start(app.catalog.clone(), sources);
         Ok(Self {
             app,
             db,
@@ -113,6 +129,7 @@ impl NativeRuntime {
                 tracking,
                 paused: false,
                 stopped: false,
+                cards: Some(cards),
             }),
         })
     }
@@ -202,10 +219,15 @@ impl NativeRuntime {
             return Ok(());
         }
         let mut failure = None;
+        if let Some(cards) = services.cards.take()
+            && cards.stop().await.is_err()
+        {
+            failure = Some(Error::CardWorker);
+        }
         if let Some(tracking) = services.tracking.take()
             && let Err(error) = tracking.stop().await
         {
-            failure = Some(Error::Tracking(error));
+            failure.get_or_insert(Error::Tracking(error));
         }
         if let Some(server) = services.server.take()
             && let Err(error) = server.stop().await

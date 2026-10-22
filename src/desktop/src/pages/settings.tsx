@@ -1,22 +1,17 @@
 import { NativeControls } from "../ui/native-controls.js";
 import { BackupControls } from "../ui/backup-controls.js";
+import { CardLibrary } from "../ui/card-library.js";
 import "../styles/backups.css";
 import { useState } from "react";
 import { useServices } from "../app/services.js";
 import { Button } from "../ui/button.js";
 import { Failure, Loading } from "../ui/states.js";
 export function SettingsPage() {
-  const { api, connection, queryClient } = useServices();
-  const catalog = api.useQuery("get", "/v1/catalog");
+  const { api, connection } = useServices();
   const capture = api.useQuery("get", "/v1/capture");
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
-  const refresh = api.useMutation("post", "/v1/catalog/refresh", {
-    onSuccess: () => {
-      void queryClient.invalidateQueries();
-    },
-  });
   const config = {
     mcpServers: {
       alkemyst: {
@@ -36,34 +31,7 @@ export function SettingsPage() {
       </header>
       <NativeControls />
       <BackupControls />
-      <section className="panel">
-        <h2>Card library</h2>
-        {catalog.isPending && <Loading />}
-        {catalog.isError && (
-          <Failure
-            error={catalog.error}
-            retry={() => {
-              void catalog.refetch();
-            }}
-          />
-        )}
-        {catalog.data && (
-          <>
-            <p>
-              <strong>{catalog.data.cards.toLocaleString()}</strong> card identities ·{" "}
-              {catalog.data.printings.toLocaleString()} printings
-            </p>
-            <p className="muted">
-              Snapshot: {catalog.data.source?.updated_at ?? "No catalog imported"}. Existing
-              metadata remains usable without internet.
-            </p>
-          </>
-        )}
-        <Button color="secondary" isLoading={refresh.isPending} onPress={() => refresh.mutate({})}>
-          Update card metadata
-        </Button>
-        {refresh.isError && <Failure error={refresh.error} />}
-      </section>
+      <CardLibrary />
       <section className="panel">
         <h2>Arena capture</h2>
         {capture.isPending && <Loading />}

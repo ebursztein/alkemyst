@@ -5,7 +5,10 @@ SELECT json_object(
     'cards', (SELECT count(*) FROM cards WHERE snapshot_id=s.active_snapshot),
     'printings', (SELECT count(*) FROM card_printings WHERE snapshot_id=s.active_snapshot),
     'arena_ids', (SELECT count(DISTINCT arena_id) FROM card_printings
-        WHERE snapshot_id=s.active_snapshot AND arena_id IS NOT NULL)
+        WHERE snapshot_id=s.active_snapshot AND arena_id IS NOT NULL),
+    'arena_aliases', (SELECT count(*) FROM arena_card_aliases),
+    'arena_alias_revision', coalesce((SELECT revision FROM table_revisions
+        WHERE table_name='arena_card_aliases'), 0)
 )
 FROM (SELECT 1) AS singleton
 LEFT JOIN catalog_state s ON s.singleton=1

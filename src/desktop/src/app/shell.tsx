@@ -1,7 +1,7 @@
 import { watchSettingsNavigation } from "./native-navigation.js";
 import { useEffect, useRef } from "react";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useServices } from "./services.js";
+import { useCatalogStatus } from "./catalog-sync.js";
 const navigation = [
   { path: "/decks", label: "Decks", icon: "▤" },
   { path: "/games", label: "Games", icon: "◷" },
@@ -10,7 +10,6 @@ const navigation = [
   { path: "/settings", label: "Settings", icon: "⚙" },
 ] as const;
 export function Shell() {
-  const { api } = useServices();
   const navigate = useNavigate();
   useEffect(
     () =>
@@ -27,7 +26,7 @@ export function Shell() {
       previous.current = path;
     }
   }, [path]);
-  const catalog = api.useQuery("get", "/v1/catalog");
+  const catalog = useCatalogStatus();
   return (
     <div className="app-layout">
       <a className="skip-link" href="#main-content">
@@ -87,6 +86,12 @@ export function Shell() {
         </p>
       </aside>
       <main id="main-content" className="main-content" tabIndex={-1}>
+        {catalog.data?.cards === 0 && path !== "/settings" && (
+          <p className="notice" role="status">
+            Download card metadata to enable local search and deck analysis.{" "}
+            <Link to="/settings">Set up card library</Link>
+          </p>
+        )}
         <Outlet />
       </main>
     </div>

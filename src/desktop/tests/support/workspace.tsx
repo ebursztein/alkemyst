@@ -8,6 +8,7 @@ import type { LocalService } from "../../../../scripts/local-service.mjs";
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(async (command: string) => {
     if (command === "native_restore_status") return { state: "none" };
+    if (command === "native_card_cache_status") return { state: "disabled", last_error: null };
     if (command === "native_settings")
       return {
         launch_at_login: false,

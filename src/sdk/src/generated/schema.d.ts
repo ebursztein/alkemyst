@@ -710,6 +710,16 @@ export interface components {
             url: string;
         };
         CatalogStatus: {
+            /**
+             * Format: int64
+             * @description Changes when an installed Arena identity import commits.
+             */
+            arena_alias_revision: number;
+            /**
+             * Format: int64
+             * @description Installed Arena identities, distinct from Scryfall's direct Arena IDs.
+             */
+            arena_aliases: number;
             /** Format: int64 */
             arena_ids: number;
             /** Format: int64 */

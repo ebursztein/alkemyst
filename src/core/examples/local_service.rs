@@ -1,6 +1,7 @@
 //! Development bootstrap. Credentials are supplied out of band, never printed.
+#[path = "support/fixture_catalog.rs"]
+mod fixture_catalog;
 use alkemyst_core::{
-    Application,
     api::{AuthConfig, RunningServer},
     db::Engine,
 };
@@ -16,7 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap_or(47831);
     let token = std::env::var("ALKEMYST_TOKEN")
         .map_err(|_| "set ALKEMYST_TOKEN to a local credential of at least 32 characters")?;
-    let app = Application::new(Engine::open(
+    let app = fixture_catalog::application(Engine::open(
         std::path::Path::new(&database),
         8 * 1024 * 1024,
     )?);

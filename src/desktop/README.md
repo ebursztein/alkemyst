@@ -7,6 +7,9 @@ credential. Credentials stay in memory and are revealed in Settings only on requ
 Native menus, the tray and window lifecycle are implemented; installer readiness
 is tracked separately.
 
+Fresh installations have [card-library setup](CARD-LIBRARY.md) with explicit first
+download, offline recovery and read-only installed Arena identity discovery.
+
 Deck workflows include Arena import/export, duplication, append-only version
 editing, local card search, notes, version browsing and quantity/curve comparison.
 The Lab exposes supported seeded native simulations, frozen run assumptions,

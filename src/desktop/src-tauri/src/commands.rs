@@ -91,5 +91,8 @@ pub fn configure_commands<R: Runtime>(builder: tauri::Builder<R>) -> tauri::Buil
         crate::backup_commands::cancel_restore,
         crate::backup_commands::restore_and_restart,
         crate::backup_commands::native_restore_status,
+        crate::card_commands::native_card_cache_status,
+        crate::card_commands::retry_card_cache,
+        crate::card_commands::choose_card_cache,
     ])
 }

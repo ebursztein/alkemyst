@@ -2512,9 +2512,23 @@
         "required": [
           "cards",
           "printings",
-          "arena_ids"
+          "arena_ids",
+          "arena_aliases",
+          "arena_alias_revision"
         ],
         "properties": {
+          "arena_alias_revision": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Changes when an installed Arena identity import commits.",
+            "minimum": 0
+          },
+          "arena_aliases": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Installed Arena identities, distinct from Scryfall's direct Arena IDs.",
+            "minimum": 0
+          },
           "arena_ids": {
             "type": "integer",
             "format": "int64",

@@ -8,4 +8,6 @@ export function startLocalService(options?: {
   coverage?: boolean;
   history?: boolean;
   analysis?: boolean;
+  deferCatalog?: boolean;
+  failFirstCatalog?: boolean;
 }): Promise<LocalService>;

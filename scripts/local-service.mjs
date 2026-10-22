@@ -14,11 +14,14 @@ export async function startLocalService({
   coverage = false,
   history = false,
   analysis = false,
+  deferCatalog = false,
+  failFirstCatalog = false,
 } = {}) {
   const directory = database ? undefined : await mkdtemp(join(tmpdir(), "alkemyst-sdk-"));
   const path = database ?? join(directory, "catalog.sqlite3");
   let child;
   let pid;
+  let deferredArchive;
   try {
     if (directory) {
       const archive = join(directory, "cards.jsonl.gz");
@@ -37,23 +40,26 @@ export async function startLocalService({
             .join("\n")
         : await readFile("src/core/tests/fixtures/cards.jsonl");
       await writeFile(archive, gzipSync(fixture));
-      await execute(
-        "cargo",
-        [
-          "run",
-          "--quiet",
-          "--locked",
-          "--example",
-          "catalog",
-          "--",
-          "import",
-          path,
-          archive,
-          "https://data.scryfall.io/default-cards/fixture.jsonl.gz",
-          "2026-10-21T21:00:00Z",
-        ],
-        { timeout: 180_000 },
-      );
+      if (deferCatalog) deferredArchive = archive;
+      else {
+        await execute(
+          "cargo",
+          [
+            "run",
+            "--quiet",
+            "--locked",
+            "--example",
+            "catalog",
+            "--",
+            "import",
+            path,
+            archive,
+            "https://data.scryfall.io/default-cards/fixture.jsonl.gz",
+            "2026-10-21T21:00:00Z",
+          ],
+          { timeout: 180_000 },
+        );
+      }
     }
     if (history) {
       await execute(
@@ -76,7 +82,12 @@ export async function startLocalService({
       ? ["llvm-cov", "run", "--no-report", "--locked"]
       : ["run", "--quiet", "--locked"];
     child = spawn("cargo", [...args, "--example", "local_service", "--", path, "0"], {
-      env: { ...process.env, ALKEMYST_TOKEN: token },
+      env: {
+        ...process.env,
+        ALKEMYST_TOKEN: token,
+        ALKEMYST_FIXTURE_CATALOG: deferredArchive ?? "",
+        ALKEMYST_FIXTURE_FAIL_FIRST: deferredArchive && failFirstCatalog ? "1" : "0",
+      },
       stdio: ["ignore", "pipe", "pipe"],
     });
     let diagnostics = "";

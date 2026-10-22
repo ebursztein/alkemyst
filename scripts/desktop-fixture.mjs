@@ -2,8 +2,13 @@ import { readFile } from "node:fs/promises";
 import { startLocalService } from "./local-service.mjs";
 import { createAlkemystClient } from "../src/sdk/src/index.ts";
 /** Isolated native backend with public card metadata; never opens the user's database. */
-export async function startDesktopFixture({ history = false } = {}) {
-  const service = await startLocalService({ analysis: true, history });
+export async function startDesktopFixture({ history = false, coldCatalog = false } = {}) {
+  const service = await startLocalService({
+    analysis: true,
+    history,
+    deferCatalog: coldCatalog,
+    failFirstCatalog: coldCatalog,
+  });
   try {
     const fixture = JSON.parse(
       await readFile("src/core/tests/fixtures/boros-equipment.json", "utf8"),

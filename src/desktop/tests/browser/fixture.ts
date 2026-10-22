@@ -1,10 +1,14 @@
 import { test as base, expect } from "@playwright/test";
 import { startDesktopFixture } from "../../../../scripts/desktop-fixture.mjs";
-export const test = base.extend<{ backend: Awaited<ReturnType<typeof startDesktopFixture>> }>({
-  backend: async ({ baseURL }, use) => {
+export const test = base.extend<{
+  backend: Awaited<ReturnType<typeof startDesktopFixture>>;
+  coldCatalog: boolean;
+}>({
+  coldCatalog: [false, { option: true }],
+  backend: async ({ baseURL, coldCatalog }, use) => {
     if (baseURL !== "http://127.0.0.1:1420")
       throw new Error("Desktop tests require the local development origin");
-    const fixture = await startDesktopFixture({ history: true });
+    const fixture = await startDesktopFixture({ history: true, coldCatalog });
     try {
       await use(fixture);
     } finally {
@@ -23,6 +27,8 @@ export const test = base.extend<{ backend: Awaited<ReturnType<typeof startDeskto
               // Browser tests simulate only OS dialogs/settings; all deck and history
               // operations still go through the authenticated Rust API and generated SDK.
               if (command === "native_restore_status") return { state: "none" };
+              if (command === "native_card_cache_status")
+                return { state: "disabled", last_error: null };
               if (command === "native_settings")
                 return {
                   launch_at_login: false,

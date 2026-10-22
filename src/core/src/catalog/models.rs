@@ -15,6 +15,10 @@ pub struct CatalogStatus {
     pub cards: u64,
     pub printings: u64,
     pub arena_ids: u64,
+    /// Installed Arena identities, distinct from Scryfall's direct Arena IDs.
+    pub arena_aliases: u64,
+    /// Changes when an installed Arena identity import commits.
+    pub arena_alias_revision: u64,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, ToSchema)]

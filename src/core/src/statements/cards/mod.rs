@@ -8,6 +8,7 @@ pub const STATUS: Statement = Statement {
         "catalog_snapshots",
         "cards",
         "card_printings",
+        "arena_card_aliases",
     ],
     cacheable: true,
 };

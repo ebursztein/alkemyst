@@ -8,6 +8,7 @@ export default defineConfig({
       exclude: [
         "src/**/*.test.{ts,tsx}",
         "src/**/*.spec.{ts,tsx}",
+        "src/desktop/tests/browser/fixture.ts", // Playwright-only test fixture, not application code.
         "src/**/generated/**",
         "src/**/vite.config.ts",
         "src/**/env.d.ts",

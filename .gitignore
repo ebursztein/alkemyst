@@ -16,3 +16,5 @@ work/
 *.db-wal
 *.log
 .DS_Store
+
+.firecrawl/

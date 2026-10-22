@@ -17,8 +17,9 @@ struct Provider {
     fail_manifest: bool,
     fail_download: bool,
 }
+#[async_trait::async_trait]
 impl BulkProvider for Provider {
-    fn descriptor(&self) -> Result<BulkDescriptor, Error> {
+    async fn descriptor(&self) -> Result<BulkDescriptor, Error> {
         if self.fail_manifest {
             return Err(Error::Invalid("offline"));
         }
@@ -27,7 +28,7 @@ impl BulkProvider for Provider {
             compressed_size: 100,
         })
     }
-    fn download(&self, _: &BulkDescriptor) -> Result<Box<dyn BufRead + Send>, Error> {
+    async fn download(&self, _: &BulkDescriptor) -> Result<Box<dyn BufRead + Send>, Error> {
         self.downloads.fetch_add(1, Ordering::SeqCst);
         if self.fail_download {
             return Err(Error::Invalid("interrupted download"));

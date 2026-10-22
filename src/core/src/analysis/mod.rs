@@ -9,5 +9,7 @@ mod comparison;
 pub mod compiler;
 pub mod jobs;
 pub mod probabilities;
-mod seed;
+pub(crate) mod seed;
 pub use comparison::{CardDelta, ComparisonSide, CurveDelta, DeckComparison};
+
+pub(crate) use snapshot::read_snapshot;

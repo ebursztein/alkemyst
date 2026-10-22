@@ -74,19 +74,7 @@ impl Analysis {
     }
     /// Exactly one prepared statement performs resolution and relational aggregation.
     pub async fn snapshot(&self, version_id: &str) -> Result<Option<DeckSnapshot>, Error> {
-        if version_id.is_empty() || version_id.len() > 256 {
-            return Err(Error::Invalid(
-                "version identifier must contain 1..=256 bytes",
-            ));
-        }
-        self.db
-            .read(analysis::SNAPSHOT, vec![json!(version_id)])
-            .await?
-            .into_iter()
-            .next()
-            .map(serde_json::from_value)
-            .transpose()
-            .map_err(Error::from)
+        read_snapshot(&self.db, version_id).await
     }
 }
 
@@ -109,4 +97,22 @@ impl Analysis {
             .await?
             .map(|compiled| compiled.profile))
     }
+}
+
+pub(crate) async fn read_snapshot(
+    db: &Engine,
+    version_id: &str,
+) -> Result<Option<DeckSnapshot>, Error> {
+    if version_id.is_empty() || version_id.len() > 256 {
+        return Err(Error::Invalid(
+            "version identifier must contain 1..=256 bytes",
+        ));
+    }
+    db.read(analysis::SNAPSHOT, vec![json!(version_id)])
+        .await?
+        .into_iter()
+        .next()
+        .map(serde_json::from_value)
+        .transpose()
+        .map_err(Error::from)
 }

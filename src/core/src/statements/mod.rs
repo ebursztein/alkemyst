@@ -9,3 +9,5 @@ pub(crate) mod analysis;
 pub mod comparison;
 pub(crate) mod history;
 pub(crate) mod simulations;
+
+pub mod practice;

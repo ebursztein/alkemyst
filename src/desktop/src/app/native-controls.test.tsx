@@ -58,13 +58,11 @@ it("requires explicit opt-in to launch at login and can pause tracking separatel
   client.clear();
 });
 it("shows read failures with retry and rejects invalid native settings", async () => {
-  call
-    .mockResolvedValueOnce({ launch_at_login: "yes", tracking_paused: false })
-    .mockResolvedValue({
-      launch_at_login: false,
-      tracking_paused: false,
-      tracking: { state: "waiting", last_error: null },
-    });
+  call.mockResolvedValueOnce({ launch_at_login: "yes", tracking_paused: false }).mockResolvedValue({
+    launch_at_login: false,
+    tracking_paused: false,
+    tracking: { state: "waiting", last_error: null },
+  });
   const client = await mount();
   await screen.findByRole("alert");
   expect(screen.queryByRole("checkbox")).toBeNull();

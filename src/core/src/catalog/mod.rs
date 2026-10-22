@@ -10,7 +10,10 @@ use crate::{
     statements::cards,
 };
 pub use download::{BulkDescriptor, BulkProvider, Scryfall};
-pub use models::{ArenaResolution, CardPage, CardSummary, CatalogSource, CatalogStatus, Search};
+pub use models::{
+    ArenaResolution, CardPage, CardSummary, CatalogSource, CatalogStatus, ReferenceResolution,
+    Search,
+};
 use serde_json::{Value, json};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -74,6 +77,26 @@ impl Catalog {
         }
         self.db
             .read(cards::RESOLVE, vec![json!(serde_json::to_string(ids)?)])
+            .await?
+            .into_iter()
+            .map(|row| Ok(serde_json::from_value(row)?))
+            .collect()
+    }
+
+    pub async fn resolve_references(
+        &self,
+        references: &[String],
+    ) -> Result<Vec<ReferenceResolution>> {
+        if references.len() > 1000 || references.iter().any(|r| r.len() > 200) {
+            return Err(Error::Invalid(
+                "at most 1000 references of at most 200 bytes",
+            ));
+        }
+        self.db
+            .read(
+                cards::REFERENCES,
+                vec![json!(serde_json::to_string(references)?)],
+            )
             .await?
             .into_iter()
             .map(|row| Ok(serde_json::from_value(row)?))

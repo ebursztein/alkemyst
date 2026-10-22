@@ -77,3 +77,14 @@ pub const ALIASES: Mutation = Mutation {
             set_code=excluded.set_code, collector_number=excluded.collector_number",
     writes: &["arena_card_aliases"],
 };
+
+pub const REFERENCES: Statement = Statement {
+    name: "cards.resolveReferences",
+    sql: concat!(
+        "WITH refs AS (SELECT value AS reference, CAST(key AS INTEGER) AS sort_order FROM json_each(?1))
+        SELECT json_object('reference',r.reference,'card',json(p.data)) ",
+        include_str!("reference_from.sql"),
+        " ORDER BY r.sort_order"
+    ),
+    reads: &["catalog_state", "cards", "card_printings", "arena_card_aliases"], cacheable:true,
+};

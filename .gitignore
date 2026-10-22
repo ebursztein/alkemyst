@@ -21,3 +21,6 @@ work/
 
 # Tauri-generated capability schemas (not maintained sources).
 src/desktop/src-tauri/gen/
+
+# Astro-generated content and virtual module types.
+**/.astro/

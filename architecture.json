@@ -12,6 +12,6 @@
     "sdk": [],
     "core": ["landlord"],
     "landlord": [],
-    "site": []
+    "site": ["desktop"]
   }
 }

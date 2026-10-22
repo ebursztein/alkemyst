@@ -1,0 +1,56 @@
+---
+import Brand from "../components/Brand.astro";
+import "@alkemyst/desktop/palette.css";
+import "../styles/marketing.css";
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#6941c6" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">
+      Skip to content
+    </a>
+    <header class="site-header wrap">
+      <Brand />
+      <nav aria-label="Primary navigation">
+        <a href="/download/">Downloads</a>
+        <a href="/docs/">Docs</a>
+        <a href="https://github.com/ebursztein/alkemyst">GitHub ↗</a>
+      </nav>
+    </header>
+    <main id="main-content" tabindex="-1">
+      <slot />
+    </main>
+    <footer class="site-footer wrap">
+      <div>
+        <Brand />
+        <p>A local lab for your next brew.</p>
+      </div>
+      <nav aria-label="Footer navigation">
+        <a href="/docs/guides/development/">Contribute</a>
+        <a href="https://github.com/ebursztein/alkemyst/blob/main/LICENSE">Apache-2.0</a>
+        <a href="https://github.com/ebursztein/alkemyst/blob/main/NOTICE">Attribution</a>
+      </nav>
+      <p class="fine-print">
+        © 2026 Elie Bursztein. An independent community project, unaffiliated with Wizards of the
+        Coast. Magic: The Gathering belongs to its respective owners.
+      </p>
+    </footer>
+  </body>
+</html>

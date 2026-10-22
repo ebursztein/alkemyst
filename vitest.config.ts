@@ -13,6 +13,7 @@ export default defineConfig({
         "src/**/vite.config.ts",
         "src/**/env.d.ts",
         "src/**/dist/**",
+        "src/**/.astro/**", // Astro-generated virtual-module types.
         "src/**/node_modules/**",
       ],
       reporter: ["text", "json-summary", "lcov", "html"],

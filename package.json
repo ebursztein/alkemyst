@@ -10,7 +10,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && pnpm --filter @alkemyst/site check",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
@@ -24,7 +24,8 @@
     "test:tooling": "node --test scripts/tests/*.test.mjs",
     "gate:probes": "node scripts/gate-zero-probes.mjs",
     "api:lint": "redocly lint src/sdk/schema/openapi.json",
-    "native:build": "node scripts/native-build.mjs"
+    "native:build": "node scripts/native-build.mjs",
+    "test:site": "playwright test --config playwright.site.config.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
@@ -46,6 +47,8 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.71.2",
     "vite": "8.3.4",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "eslint-plugin-astro": "3.2.1",
+    "prettier-plugin-astro": "1.1.1"
   }
 }

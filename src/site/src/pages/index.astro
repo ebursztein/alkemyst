@@ -1,0 +1,117 @@
+---
+import Marketing from "../layouts/Marketing.astro";
+import "../styles/home.css";
+---
+
+<Marketing
+  title="Alkemyst — your local deck laboratory"
+  description="Track Arena games, keep every deck version, and explore mana, equipment and tutors with seeded Rust simulations. Open source. Local-first."
+>
+  <section class="hero wrap" aria-labelledby="hero-title">
+    <p class="eyebrow">
+      <span aria-hidden="true">●</span> LOCAL-FIRST · OPEN SOURCE · IN DEVELOPMENT
+    </p>
+    <h1 id="hero-title">Brew with evidence.</h1>
+    <p class="hero-copy">
+      Your decks, your games, your next experiment. A local Magic: The Gathering lab for turning
+      “what if?” into a question you can measure.
+    </p>
+    <div class="hero-actions">
+      <a class="button primary" href="/download/">
+        Preview status
+      </a>
+      <a class="button secondary" href="/docs/">
+        Read the docs <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+    <p class="hero-note">
+      Built for Arena constructed. Powered by Rust. Your library stays on your machine.
+    </p>
+    <figure class="product-view">
+      <div class="window-chrome" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+        <small>Alkemyst · Lab</small>
+      </div>
+      <img
+        src="/images/desktop-lab.png"
+        width="1440"
+        height="1050"
+        alt="Alkemyst Lab with a public Boros example deck, configurable trial count, tutor assumptions, and joint equipment goals."
+        fetchpriority="high"
+      />
+      <figcaption>
+        The working Lab interface with a public example deck. The model’s boundaries stay visible
+        beside the experiment.
+      </figcaption>
+    </figure>
+  </section>
+  <section class="story wrap" aria-label="From your last game to your next brew">
+    <article class="story-row">
+      <p class="section-number">01 / REMEMBER</p>
+      <div>
+        <h2>Keep the deck you actually played.</h2>
+        <p>
+          Arena capture preserves available game history and the submitted deck version. Edit your
+          next brew without rewriting the past. Partial captures and unknown results stay clearly
+          marked.
+        </p>
+        <a href="/docs/guides/tracking/">
+          How tracking works <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </article>
+    <article class="story-row">
+      <p class="section-number">02 / EXPERIMENT</p>
+      <div>
+        <h2>Ask a more useful question.</h2>
+        <blockquote>
+          “With these tutors and mana costs, how often can I have two Equipment in play and one
+          attached to an attack-ready creature by turn five?”
+        </blockquote>
+        <p>
+          Run seeded Monte Carlo experiments and exact draw calculations. Compare curve and source
+          counts. See sample sizes, uncertainty, legendary duplicate bricks, and the interactions a
+          model does not support.
+        </p>
+        <a href="/docs/guides/analysis/">
+          Read the analysis assumptions <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </article>
+    <article class="story-row">
+      <p class="section-number">03 / CONNECT</p>
+      <div>
+        <h2>Give your agent a local workbench.</h2>
+        <p>
+          Connect your own MCP-compatible agent to search cached cards, inspect history, compare
+          versions, and run the same Rust experiments. Agent edits create new versions of your deck.
+        </p>
+        <a href="/docs/guides/mcp/">
+          Connect through MCP <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </article>
+  </section>
+  <section class="community wrap">
+    <p class="eyebrow">A COMMUNITY LAB</p>
+    <h2>Build your own better brew.</h2>
+    <p>
+      Alkemyst is Apache-2.0 software, built around a maintained Rust simulation engine. Help
+      improve the models, add supported interactions, or make the app easier to use.
+    </p>
+    <div class="hero-actions">
+      <a class="button primary" href="https://github.com/ebursztein/alkemyst">
+        Explore the source ↗
+      </a>
+      <a class="button secondary" href="/docs/guides/development/">
+        Start contributing
+      </a>
+    </div>
+    <p class="fine-print">
+      No accounts or cloud deck storage. Public card metadata and images need internet when fetched.
+      In-app AI chat and preview installers are still being built.
+    </p>
+  </section>
+</Marketing>

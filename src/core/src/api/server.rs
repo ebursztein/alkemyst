@@ -1,16 +1,17 @@
 use super::{AuthConfig, router_with_mcp};
 use crate::Application;
+use hyper::server::conn::http1;
+use hyper_util::{rt::TokioIo, service::TowerToHyperService};
 use std::{io, net::SocketAddr};
-use tokio::{sync::oneshot, task::JoinHandle};
+use tokio::task::{JoinHandle, JoinSet};
+use tokio_util::sync::CancellationToken;
 
 pub struct RunningServer {
     address: SocketAddr,
     analysis: crate::analysis::Analysis,
-    mcp_stop: tokio_util::sync::CancellationToken,
-    shutdown: Option<oneshot::Sender<()>>,
+    mcp_stop: CancellationToken,
     task: Option<JoinHandle<io::Result<()>>>,
 }
-
 impl RunningServer {
     pub async fn start(
         app: Application,
@@ -25,24 +26,48 @@ impl RunningServer {
         }
         let listener = tokio::net::TcpListener::bind(address).await?;
         let address = listener.local_addr()?;
-        let (shutdown, stopped) = oneshot::channel();
         let config = rmcp::transport::streamable_http_server::StreamableHttpServerConfig::default();
         let mcp_stop = config.cancellation_token.clone();
+        let stop = mcp_stop.clone();
         let analysis = app.analysis.clone();
         analysis.start_jobs().await.map_err(io::Error::other)?;
         let routes = router_with_mcp(app, auth, config);
         let task = tokio::spawn(async move {
-            axum::serve(listener, routes)
-                .with_graceful_shutdown(async {
-                    let _ = stopped.await;
-                })
-                .await
+            let mut connections = JoinSet::new();
+            let mut failure = None;
+            loop {
+                tokio::select! {
+                    biased;
+                    _ = stop.cancelled() => break,
+                    _ = connections.join_next(), if !connections.is_empty() => {},
+                    accepted = listener.accept() => {
+                        let (stream, _) = match accepted {
+                            Ok(connection) => connection,
+                            Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+                            Err(error) => { failure = Some(error); stop.cancel(); break; }
+                        };
+                        let service = TowerToHyperService::new(routes.clone());
+                        let stopped = stop.clone();
+                        connections.spawn(async move {
+                            // Dropping the connection future also cancels its active handler,
+                            // including partial request bodies and async metadata acquisition.
+                            tokio::select! {
+                                biased;
+                                _ = stopped.cancelled() => {},
+                                _ = http1::Builder::new().serve_connection(TokioIo::new(stream), service) => {},
+                            }
+                        });
+                    }
+                }
+            }
+            drop(listener);
+            while connections.join_next().await.is_some() {}
+            failure.map_or(Ok(()), Err)
         });
         Ok(Self {
             address,
             analysis,
             mcp_stop,
-            shutdown: Some(shutdown),
             task: Some(task),
         })
     }
@@ -51,21 +76,22 @@ impl RunningServer {
     }
     pub async fn stop(mut self) -> io::Result<()> {
         self.signal();
-        if let Some(task) = self.task.take() {
-            task.await.map_err(io::Error::other)??;
-        }
-        self.analysis.stop_jobs().await.map_err(io::Error::other)?;
-        Ok(())
+        let serving = match self.task.take() {
+            Some(task) => task
+                .await
+                .map_err(io::Error::other)
+                .and_then(|result| result),
+            None => Ok(()),
+        };
+        // Join jobs even if the listener failed; queued SQL writes must finish before DB close.
+        let jobs = self.analysis.stop_jobs().await.map_err(io::Error::other);
+        serving.and(jobs)
     }
     fn signal(&mut self) {
         self.mcp_stop.cancel();
         self.analysis.signal_jobs_stop();
-        if let Some(shutdown) = self.shutdown.take() {
-            let _ = shutdown.send(());
-        }
     }
 }
-
 impl Drop for RunningServer {
     fn drop(&mut self) {
         self.signal();

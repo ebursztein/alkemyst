@@ -89,3 +89,9 @@ pub(super) struct Cursor {
     pub name: String,
     pub oracle_id: String,
 }
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct ReferenceResolution {
+    pub reference: String,
+    pub card: Option<Value>,
+}

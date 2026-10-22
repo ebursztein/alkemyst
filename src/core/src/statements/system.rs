@@ -11,3 +11,5 @@ pub const BUMP_REVISION: &str = "INSERT INTO table_revisions(table_name, revisio
 pub const CATALOG: &str = include_str!("../../migrations/002_catalog.sql");
 
 pub const ARENA_ALIASES: &str = include_str!("../../migrations/003_arena_aliases.sql");
+
+pub const DECKS: &str = include_str!("../../migrations/004_decks.sql");

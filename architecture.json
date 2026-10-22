@@ -3,7 +3,8 @@
   "exemptions": [
     "src/sdk/src/generated/schema.d.ts",
     "src/sdk/schema/openapi.json",
-    "src/core/tests/fixtures/arena-game.txt"
+    "src/core/tests/fixtures/arena-game.txt",
+    "src/core/tests/fixtures/cards.jsonl"
   ],
   "packages": {
     "desktop": ["sdk"],

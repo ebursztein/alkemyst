@@ -46,3 +46,12 @@ The catalog retains every field supplied in Scryfall's default-card export,
 including faces, legalities and external image links. This is the English-preferred
 printing catalog, not every translation or a separate rulings/tag download.
 Searchable rules text does not imply simulation support for a card's mechanics.
+
+## Deck core
+
+The core provides immutable deck versions, idempotent creation, append-only
+agent edits, notes, and Arena text import/export. Captured card references retain
+Arena IDs; library selections can use Oracle IDs or exact Scryfall printings.
+Unknown imports are reported instead of silently dropping card lines. SQLite
+triggers protect sealed versions, including their card lists. REST/MCP and desktop
+interfaces are being built on these shared operations.

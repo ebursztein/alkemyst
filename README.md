@@ -217,3 +217,11 @@ remain explicit, including null mana-value bins. Printing-only changes cancel
 out when both references resolve to the same card. These deltas contain no
 inferred win rates or simulation results; compare those through their separately
 labeled operations and sample counts.
+
+## Manual practice
+
+`/v1/practice` provides saved opening hands, London mulligans, ordered bottoming,
+draws, basic turns and visible-card controls through REST, the generated SDK and
+MCP. Sessions freeze their deck metadata and seed; immutable steps use revision
+checks and idempotency keys. Practice is a manual sandbox, with mana payments,
+card abilities and combat left to the player. See [practice semantics](src/core/src/practice/README.md).

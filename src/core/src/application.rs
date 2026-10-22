@@ -9,6 +9,7 @@ use crate::{
 #[derive(Clone)]
 pub struct Application {
     pub catalog: Catalog,
+    pub practice: crate::practice::Practice,
     pub analysis: crate::analysis::Analysis,
     pub decks: Decks,
     pub ingest: crate::ingest::Ingestor,
@@ -24,6 +25,7 @@ impl Application {
     pub fn with_bulk_provider(db: Engine, provider: std::sync::Arc<dyn BulkProvider>) -> Self {
         Self {
             catalog: Catalog::new(db.clone()),
+            practice: crate::practice::Practice::new(db.clone()),
             analysis: crate::analysis::Analysis::new(db.clone()),
             ingest: crate::ingest::Ingestor::new(db.clone()),
             history: crate::history::History::new(db.clone()),

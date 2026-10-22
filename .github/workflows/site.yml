@@ -32,6 +32,7 @@ concurrency:
   cancel-in-progress: true
 env:
   SITE_URL: https://alkemyst.3713.workers.dev
+  SITE_DEPLOYMENT_MODE: ${{ vars.SITE_DEPLOYMENT_MODE || 'manual' }}
   WRANGLER_SEND_METRICS: "false"
   CI: "true"
 jobs:
@@ -40,6 +41,18 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
+      - name: Report explicit delivery mode
+        run: |
+          if [ "$SITE_DEPLOYMENT_MODE" != manual ] && [ "$SITE_DEPLOYMENT_MODE" != automatic ]; then
+            echo "::error::SITE_DEPLOYMENT_MODE must be manual or automatic"
+            exit 1
+          fi
+          echo "### Site delivery mode: $SITE_DEPLOYMENT_MODE" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$SITE_DEPLOYMENT_MODE" = manual ]; then
+            echo "CI validates and retains the static artifact. Publication uses a separate local Wrangler deployment; a green validation run does not publish the site." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Main publishes the validated artifact through the deployment job and verifies the live site." >> "$GITHUB_STEP_SUMMARY"
+          fi
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
@@ -69,7 +82,7 @@ jobs:
           retention-days: 14
   deploy:
     name: Deploy verified static site
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.SITE_DEPLOYMENT_MODE == 'automatic'
     needs: validate
     runs-on: ubuntu-24.04
     timeout-minutes: 15

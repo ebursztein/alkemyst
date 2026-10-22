@@ -39,7 +39,9 @@ specific, justified and reviewed. Keep tests for retries and interrupted writes.
 Never commit raw Arena logs, credentials, personal identifiers, or local user paths.
 Real-game fixtures must be minimal and sanitized, retaining provenance without PII.
 Preserve upstream licenses. Original landlord source is MIT. No cloud game storage.
-Keep exact dependency/tool versions and lockfiles. No blanket vulnerability ignores.
+Keep exact dependency/tool versions and lockfiles. The architecture gate rejects
+ranges in maintained npm/Cargo dependency declarations, including target-specific
+Rust dependencies; local workspace/path references and full Git revisions are allowed. No blanket vulnerability ignores.
 
 ## Release
 

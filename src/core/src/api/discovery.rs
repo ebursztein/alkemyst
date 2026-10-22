@@ -16,6 +16,10 @@ pub struct Discovery {
 #[utoipa::path(get,path="/v1/discovery",operation_id="systemDiscovery",
     responses((status=200,body=Discovery),(status="4XX",body=Problem),(status="5XX",body=Problem)))]
 pub(super) async fn get() -> Json<Discovery> {
+    Json(discover())
+}
+
+pub(crate) fn discover() -> Discovery {
     let schema = serde_json::to_value(super::ApiDoc::openapi()).expect("OpenAPI serialization");
     let mut operations = schema["paths"]
         .as_object()
@@ -26,11 +30,11 @@ pub(super) async fn get() -> Json<Discovery> {
         .filter_map(|operation| operation["operationId"].as_str().map(str::to_owned))
         .collect::<Vec<_>>();
     operations.sort();
-    Json(Discovery {
+    Discovery {
         name: "Alkemyst",
         version: env!("CARGO_PKG_VERSION"),
         local_only: true,
         capabilities: vec!["cards", "decks", "versions", "notes"],
         operations,
-    })
+    }
 }

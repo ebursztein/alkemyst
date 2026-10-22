@@ -142,11 +142,13 @@ fn cors(mut response: Response, origin: Option<HeaderValue>) -> Response {
             .insert(header::VARY, HeaderValue::from_static("Origin"));
         response.headers_mut().insert(
             header::ACCESS_CONTROL_ALLOW_HEADERS,
-            HeaderValue::from_static("Authorization, Content-Type"),
+            HeaderValue::from_static(
+                "Authorization, Content-Type, MCP-Protocol-Version, MCP-Session-Id, Last-Event-ID",
+            ),
         );
         response.headers_mut().insert(
             header::ACCESS_CONTROL_ALLOW_METHODS,
-            HeaderValue::from_static("GET, POST, OPTIONS"),
+            HeaderValue::from_static("GET, POST, DELETE, OPTIONS"),
         );
     }
     response

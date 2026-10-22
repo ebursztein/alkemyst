@@ -1,10 +1,11 @@
-use super::{AuthConfig, router};
+use super::{AuthConfig, router_with_mcp};
 use crate::Application;
 use std::{io, net::SocketAddr};
 use tokio::{sync::oneshot, task::JoinHandle};
 
 pub struct RunningServer {
     address: SocketAddr,
+    mcp_stop: tokio_util::sync::CancellationToken,
     shutdown: Option<oneshot::Sender<()>>,
     task: Option<JoinHandle<io::Result<()>>>,
 }
@@ -24,8 +25,11 @@ impl RunningServer {
         let listener = tokio::net::TcpListener::bind(address).await?;
         let address = listener.local_addr()?;
         let (shutdown, stopped) = oneshot::channel();
+        let config = rmcp::transport::streamable_http_server::StreamableHttpServerConfig::default();
+        let mcp_stop = config.cancellation_token.clone();
+        let routes = router_with_mcp(app, auth, config);
         let task = tokio::spawn(async move {
-            axum::serve(listener, router(app, auth))
+            axum::serve(listener, routes)
                 .with_graceful_shutdown(async {
                     let _ = stopped.await;
                 })
@@ -33,6 +37,7 @@ impl RunningServer {
         });
         Ok(Self {
             address,
+            mcp_stop,
             shutdown: Some(shutdown),
             task: Some(task),
         })
@@ -48,6 +53,7 @@ impl RunningServer {
         Ok(())
     }
     fn signal(&mut self) {
+        self.mcp_stop.cancel();
         if let Some(shutdown) = self.shutdown.take() {
             let _ = shutdown.send(());
         }

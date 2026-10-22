@@ -1,7 +1,7 @@
 mod auth;
 mod cards;
 mod decks;
-mod discovery;
+pub(crate) mod discovery;
 mod extract;
 mod models;
 mod notes;
@@ -31,8 +31,18 @@ struct AppState {
 }
 
 pub fn router(app: Application, auth: AuthConfig) -> Router {
+    router_with_mcp(app, auth, Default::default())
+}
+
+pub(super) fn router_with_mcp(
+    app: Application,
+    auth: AuthConfig,
+    config: rmcp::transport::streamable_http_server::StreamableHttpServerConfig,
+) -> Router {
+    let mcp = crate::mcp::service(app.clone(), config);
     let state = AppState { app, auth };
     let protected = Router::new()
+        .nest_service("/mcp", mcp)
         .route("/v1/discovery", get(discovery::get))
         .route("/v1/decks", get(decks::list).post(decks::create))
         .route("/v1/deck-versions", post(decks::create_version))

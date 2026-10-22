@@ -21,6 +21,9 @@ utoipa = "=5.5.0"
 uuid = { version = "=1.28.0", features = ["v4"] }
 axum = "=0.8.9"
 subtle = "=2.6.1"
+rmcp = { version = "=3.5.1", default-features = false, features = ["server", "transport-streamable-http-server"] }
+tokio-util = "=0.7.19"
+jsonschema = { version = "=0.59.0", default-features = false }
 
 [dev-dependencies]
 manasight-parser = { version = "=0.7.3", default-features = false, features = ["brace_depth_flush"] }

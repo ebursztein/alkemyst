@@ -54,7 +54,7 @@ agent edits, notes, and Arena text import/export. Captured card references retai
 Arena IDs; library selections can use Oracle IDs or exact Scryfall printings.
 Unknown imports are reported instead of silently dropping card lines. SQLite
 triggers protect sealed versions, including their card lists. REST and the generated
-TypeScript SDK now expose these operations; MCP and desktop integration are next.
+TypeScript SDK and MCP now expose these operations; desktop integration is next.
 
 ## Local API development
 
@@ -86,3 +86,24 @@ input with a reused key returns a typed conflict. Pagination uses opaque cursors
 SDK integration tests launch an isolated Rust service with synthetic card data.
 They exercise real HTTP authentication, deck retries, search, errors and TanStack
 Query access without downloading cards or reading personal Arena history.
+
+## Local MCP development
+
+The same service exposes authenticated Streamable HTTP at `/mcp` on its printed
+loopback base URL. Configure an MCP client with that HTTP URL and an
+`Authorization: Bearer <local credential>` header. Use the credential already
+provided to the service, without pasting it into URLs, repository files or logs.
+The native Settings connection screen will expose this configuration when the
+desktop shell lands. The developer example must currently remain running.
+
+MCP exposes discovery, card search/metadata/resolution, catalog status/refresh,
+decks, immutable versions, Arena import/export and notes. Input and output schemas
+come from OpenAPI through an explicit operation allowlist. Adding an HTTP endpoint
+does not automatically grant agents access. There is no SQL or file-path tool.
+Game/statistics and simulation tools arrive with their corresponding operations.
+
+Successful structured results wrap the REST response in `data`; tool failures
+return `isError` with the same typed problem as REST. MCP mutations record agent
+provenance. SQLite, prepared statements, the bounded result cache, and refresh
+coordination are shared with REST. Sessions contain no separate domain storage.
+Validation uses local JSON schemas with HTTP and file retrieval disabled.

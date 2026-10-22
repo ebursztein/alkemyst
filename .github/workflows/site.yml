@@ -52,6 +52,9 @@ jobs:
       - run: pnpm exec wrangler deploy --config src/site/wrangler.jsonc --dry-run --outdir '${{ runner.temp }}/site-dry-run'
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:site:worker
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm check:architecture
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: site-static-${{ github.sha }}

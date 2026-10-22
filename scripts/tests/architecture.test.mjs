@@ -65,3 +65,10 @@ test("rejects SQL hidden in an API module", () =>
     write("src/core/src/api.rs", 'let query = "SELECT name FROM decks";');
     assert.match(checkArchitecture(dir).join("\n"), /SQL literals belong in statement modules/);
   }));
+
+test("Wrangler runtime artifacts are excluded while maintained tooling stays checked", () =>
+  fixture((dir, write) => {
+    write(".wrangler/tmp/worker.js", "// generated\n".repeat(301));
+    write("scripts/owned.mjs", "// maintained\n".repeat(301));
+    assert.deepEqual(checkArchitecture(dir), ["scripts/owned.mjs: 301 lines exceeds 300"]);
+  }));

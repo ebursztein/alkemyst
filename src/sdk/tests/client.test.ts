@@ -27,3 +27,18 @@ describe("generated API client", () => {
     }
   });
 });
+
+it("builds TanStack queries from the generated contract", async () => {
+  const { QueryClient } = await import("@tanstack/react-query");
+  const { createAlkemystQueryClient } = await import("../src/index.js");
+  const fetcher = vi
+    .fn<typeof fetch>()
+    .mockResolvedValue(Response.json({ name: "Alkemyst", version: "0.1.0" }));
+  const api = createAlkemystQueryClient("http://127.0.0.1:47831", "test-only", fetcher);
+  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  expect(await cache.fetchQuery(api.queryOptions("get", "/v1/health"))).toEqual({
+    name: "Alkemyst",
+    version: "0.1.0",
+  });
+  cache.clear();
+});

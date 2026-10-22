@@ -130,3 +130,12 @@ fn copy_archive(reader: impl Read, writer: &mut impl Write, expected: u64) -> Re
 #[cfg(test)]
 #[path = "../../tests/unit/catalog_download.rs"]
 mod tests;
+
+impl<P: BulkProvider + ?Sized> BulkProvider for std::sync::Arc<P> {
+    fn descriptor(&self) -> Result<BulkDescriptor> {
+        self.as_ref().descriptor()
+    }
+    fn download(&self, descriptor: &BulkDescriptor) -> Result<Box<dyn BufRead + Send>> {
+        self.as_ref().download(descriptor)
+    }
+}

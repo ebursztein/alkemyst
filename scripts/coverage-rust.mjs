@@ -9,7 +9,7 @@ mkdirSync("coverage/rust", { recursive: true });
 mkdirSync("work", { recursive: true });
 execFileSync("cargo", ["llvm-cov", "clean", "--workspace"], { stdio: "inherit" });
 execFileSync("cargo", ["llvm-cov", "--workspace", "--locked", "--no-report"], { stdio: "inherit" });
-coverRustCli();
+await coverRustCli();
 execFileSync(
   "cargo",
   [

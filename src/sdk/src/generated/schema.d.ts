@@ -118,6 +118,69 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/chat/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List local conversations newest first. Cursor namespace: c1. */
+        get: operations["chatConversationsList"];
+        put?: never;
+        /**
+         * Create local history with frozen context choices. This does not contact an AI
+         *     provider. Retrying a deleted creation returns not found instead of recreating it.
+         */
+        post: operations["chatConversationsCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/chat/conversations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the pinned local context and current message revision. */
+        get: operations["chatConversationGet"];
+        put?: never;
+        post?: never;
+        /**
+         * Remove transcript content and context references. Keep only a minimal creation
+         *     tombstone for retry safety. Existing backups and SQLite recovery files are not erased.
+         */
+        delete: operations["chatConversationDelete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/chat/conversations/{id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a bounded chronological message page. Cursor namespace: m1. */
+        get: operations["chatMessagesList"];
+        put?: never;
+        /**
+         * Append user text at an expected revision. This stores history locally without
+         *     generating a reply. Clients cannot supply assistant or tool roles.
+         */
+        post: operations["chatMessagesAppendUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/deck-versions": {
         parameters: {
             query?: never;
@@ -630,6 +693,10 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AppendMessageCommand: {
+            idempotency_key: string;
+            input: components["schemas"]["NewMessage"];
+        };
         ArenaExport: {
             text: string;
         };
@@ -752,6 +819,22 @@ export interface components {
             /** Format: int32 */
             unresolved_main: number;
         };
+        Conversation: {
+            /** Format: int64 */
+            created_at: number;
+            id: string;
+            /** Format: int32 */
+            revision: number;
+            share_deck: boolean;
+            share_history: boolean;
+            share_notes: boolean;
+            title: string;
+            version_id?: string | null;
+        };
+        ConversationPage: {
+            items: components["schemas"]["Conversation"][];
+            next_cursor?: string | null;
+        };
         Counts: {
             /** Format: int32 */
             creatures: number;
@@ -767,6 +850,10 @@ export interface components {
             sideboard: number;
             /** Format: int32 */
             unresolved_main: number;
+        };
+        CreateConversationCommand: {
+            idempotency_key: string;
+            input: components["schemas"]["NewConversation"];
         };
         CreateDeck: {
             cards: components["schemas"]["DeckCard"][];
@@ -1004,6 +1091,22 @@ export interface components {
             mode: components["schemas"]["MatchMode"];
             outcome?: null | components["schemas"]["ObservedOutcome"];
         };
+        Message: {
+            body: string;
+            conversation_id: string;
+            /** Format: int64 */
+            created_at: number;
+            id: string;
+            role: components["schemas"]["MessageRole"];
+            /** Format: int32 */
+            sequence: number;
+        };
+        MessagePage: {
+            items: components["schemas"]["Message"][];
+            next_cursor?: string | null;
+        };
+        /** @enum {string} */
+        MessageRole: "user" | "assistant" | "tool";
         /** @enum {string} */
         MissingData: "initial_state" | "terminal_result" | "state_gap" | "unverifiable_chain" | "truncated" | "connection" | "deck_version" | "local_seat" | "conflicting_result" | "outcome";
         /** @enum {string} */
@@ -1018,6 +1121,18 @@ export interface components {
             /** Format: int32 */
             minimum_keep: number;
             required_references: string[];
+        };
+        NewConversation: {
+            share_deck?: boolean;
+            share_history?: boolean;
+            share_notes?: boolean;
+            title: string;
+            version_id?: string | null;
+        };
+        NewMessage: {
+            body: string;
+            /** Format: int32 */
+            expected_revision: number;
         };
         NewNote: {
             body: string;
@@ -1731,6 +1846,237 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogStatus"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    chatConversationsList: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationPage"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    chatConversationsCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateConversationCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Conversation"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    chatConversationGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Conversation"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    chatConversationDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Local conversation removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    chatMessagesList: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessagePage"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    chatMessagesAppendUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppendMessageCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"];
                 };
             };
             "4XX": {

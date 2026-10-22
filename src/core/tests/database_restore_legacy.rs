@@ -1,4 +1,9 @@
-use alkemyst_core::{catalog::Catalog, db::Engine, domain::Decks};
+use alkemyst_core::{
+    catalog::Catalog,
+    chat::{Chat, NewConversation},
+    db::Engine,
+    domain::Decks,
+};
 use rusqlite::Connection;
 use std::path::Path;
 
@@ -22,6 +27,7 @@ fn legacy(path: &Path, version: usize) {
             include_str!("../migrations/008_simulations.sql"),
             include_str!("../migrations/008_simulation_details.sql"),
         ],
+        &[include_str!("../migrations/009_practice.sql")],
     ];
     for scripts in migrations.iter().take(version) {
         for sql in *scripts {
@@ -34,7 +40,7 @@ fn legacy(path: &Path, version: usize) {
 async fn known_older_backups_migrate_only_the_private_copy() {
     let dir = tempfile::tempdir().unwrap();
     let target = Engine::memory(4096).unwrap();
-    for version in 1..=8 {
+    for version in 1..=9 {
         let original = dir.path().join(format!("schema-{version}.sqlite3"));
         let staged = dir.path().join(format!("staged-{version}.sqlite3"));
         legacy(&original, version);
@@ -54,6 +60,25 @@ async fn known_older_backups_migrate_only_the_private_copy() {
                 .items
                 .is_empty()
         );
+        let chat = Chat::new(target.clone());
+        let conversation = chat
+            .create(
+                "after-upgrade",
+                NewConversation {
+                    title: "New local history".into(),
+                    version_id: None,
+                    share_deck: false,
+                    share_notes: false,
+                    share_history: false,
+                },
+            )
+            .await
+            .unwrap();
+        assert_eq!(
+            chat.get(&conversation.id).await.unwrap(),
+            Some(conversation)
+        );
+        assert_eq!(std::fs::read(&original).unwrap(), before);
     }
     target.close().await.unwrap();
 }

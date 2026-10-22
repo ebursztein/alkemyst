@@ -4,6 +4,7 @@ pub mod api;
 mod application;
 pub use application::Application;
 pub mod catalog;
+pub mod chat;
 pub mod db;
 pub mod domain;
 mod health;

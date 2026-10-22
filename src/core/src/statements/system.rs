@@ -29,6 +29,7 @@ pub const SIMULATIONS: &str = include_str!("../../migrations/008_simulations.sql
 pub const SIMULATION_DETAILS: &str = include_str!("../../migrations/008_simulation_details.sql");
 
 pub const PRACTICE: &str = include_str!("../../migrations/009_practice.sql");
+pub const CHAT: &str = include_str!("../../migrations/010_chat.sql");
 
 pub const BACKUP_READ_ONLY: &str = "PRAGMA trusted_schema=OFF; PRAGMA query_only=ON;";
 pub const BACKUP_UPGRADE: &str = "PRAGMA query_only=OFF; PRAGMA foreign_keys=ON;";

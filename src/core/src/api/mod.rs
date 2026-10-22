@@ -1,6 +1,7 @@
 mod analysis;
 mod auth;
 mod cards;
+mod chat;
 mod decks;
 pub(crate) mod discovery;
 mod extract;
@@ -50,6 +51,15 @@ pub(super) fn router_with_mcp(
     let state = AppState { app, auth };
     let protected = Router::new()
         .nest_service("/mcp", mcp)
+        .route("/v1/chat/conversations", get(chat::list).post(chat::create))
+        .route(
+            "/v1/chat/conversations/{id}",
+            get(chat::get).delete(chat::delete),
+        )
+        .route(
+            "/v1/chat/conversations/{id}/messages",
+            get(chat::messages).post(chat::append),
+        )
         .route("/v1/practice", get(practice::list).post(practice::create))
         .route("/v1/practice/{id}", get(practice::get))
         .route("/v1/practice/{id}/inputs", get(practice::inputs))

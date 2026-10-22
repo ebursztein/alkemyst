@@ -67,6 +67,32 @@ impl IntoResponse for ApiError {
     }
 }
 
+impl From<crate::chat::Error> for ApiError {
+    fn from(error: crate::chat::Error) -> Self {
+        use crate::chat::Error;
+        match error {
+            Error::Database(error) => error.into(),
+            Error::Invalid(message) => Self::invalid(message),
+            Error::Conflict => Self::new(
+                StatusCode::CONFLICT,
+                ErrorCode::Conflict,
+                "Idempotency key already used for different conversation content",
+            ),
+            Error::StaleRevision => Self::new(
+                StatusCode::CONFLICT,
+                ErrorCode::Conflict,
+                "Conversation revision changed; reload before appending",
+            ),
+            Error::NotFound => Self::missing(),
+            Error::Json(_) => Self::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ErrorCode::Internal,
+                "Invalid stored conversation data",
+            ),
+        }
+    }
+}
+
 impl From<crate::domain::Error> for ApiError {
     fn from(error: crate::domain::Error) -> Self {
         use crate::domain::Error;

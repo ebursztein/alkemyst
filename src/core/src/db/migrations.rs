@@ -18,6 +18,7 @@ const STEPS: &[&[&str]] = &[
     ],
     &[system::SIMULATIONS, system::SIMULATION_DETAILS],
     &[system::PRACTICE],
+    &[system::CHAT],
 ];
 pub(super) const CURRENT_VERSION: i64 = STEPS.len() as i64;
 

@@ -37,7 +37,16 @@ impl Chat {
                 "sharing context requires a selected deck version",
             ));
         }
-        let fingerprint: String = Sha256::digest(serde_json::to_vec(&input)?)
+        // Freeze the v1 receipt format independently of DTO field ordering/extensions.
+        let canonical = (
+            1,
+            &input.title,
+            &input.version_id,
+            input.share_deck,
+            input.share_notes,
+            input.share_history,
+        );
+        let fingerprint: String = Sha256::digest(serde_json::to_vec(&canonical)?)
             .iter()
             .map(|byte| format!("{byte:02x}"))
             .collect();

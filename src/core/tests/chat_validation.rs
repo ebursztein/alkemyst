@@ -31,6 +31,21 @@ async fn invalid_inputs_do_not_consume_keys_or_change_conversations() {
         .create("valid", conversation("Valid"))
         .await
         .unwrap();
+    for expected_revision in [2000, u32::MAX] {
+        assert!(
+            app.chat
+                .append_user(
+                    &created.id,
+                    "limit",
+                    NewMessage {
+                        body: "Question".into(),
+                        expected_revision,
+                    }
+                )
+                .await
+                .is_err()
+        );
+    }
     for body in ["", " ", &"x".repeat(16385)] {
         assert!(
             app.chat
@@ -64,6 +79,21 @@ async fn invalid_inputs_do_not_consume_keys_or_change_conversations() {
         assert!(app.chat.messages(&created.id, query).await.is_err());
     }
     assert!(app.chat.get("").await.is_err());
+    for cursor in [
+        "c1:0000000000000000",
+        "c1:ffffffffffffffff",
+        "c1:gggggggggggggggg",
+    ] {
+        assert!(
+            app.chat
+                .list(ChatQuery {
+                    limit: 1,
+                    cursor: Some(cursor.into())
+                })
+                .await
+                .is_err()
+        );
+    }
     assert!(app.chat.delete("").await.is_err());
     assert!(app.chat.get("missing").await.unwrap().is_none());
     assert!(

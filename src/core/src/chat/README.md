@@ -21,8 +21,9 @@ cannot supply assistant/tool roles. Chat-history operations are not MCP tools.
 Deleting a conversation transactionally removes its messages and clears its title,
 version reference and sharing flags. A tombstone retains only the creation key,
 request fingerprint, conversation id, ordinal and creation time so delayed retries
-cannot recreate it. The fingerprint hashes normalized creation settings, not message
-content. Prompt text never enters the shared mutation-receipt table. Deletion is
+cannot recreate it. The fingerprint hashes a versioned tuple of normalized creation
+settings, independently of DTO field ordering. Prompt text never enters the shared
+mutation-receipt table. Deletion is
 logical; existing backups and SQLite recovery files may retain earlier content.
 Captured games, deck versions and simulation results are unaffected.
 

@@ -7,6 +7,37 @@ use alkemyst_core::{
 use serde_json::json;
 
 #[tokio::test]
+async fn creation_retries_preserve_the_versioned_fingerprint_contract() {
+    let db = Engine::memory(4096).unwrap();
+    // SHA-256 of the frozen v1 tuple [1,"Equipment questions",null,false,false,false].
+    db.write(vec![Write {
+        statement: Mutation {
+            sql: "INSERT INTO chat_conversations(id,create_key,fingerprint,created_at,title,share_deck,share_notes,share_history)
+                VALUES ('fixture-id','fixture-key','03d88186488f2ccfb781ee83162d02c40fb5af69b421624ffdee8fc94487c9d8',1,'Equipment questions',0,0,0)",
+            writes: &["chat_conversations"],
+        },
+        params: vec![], expected_rows: Some(1),
+    }]).await.unwrap();
+    let result = Application::new(db.clone())
+        .chat
+        .create(
+            "fixture-key",
+            NewConversation {
+                title: "Equipment questions".into(),
+                version_id: None,
+                share_deck: false,
+                share_notes: false,
+                share_history: false,
+            },
+        )
+        .await
+        .unwrap();
+    assert_eq!(result.id, "fixture-id");
+    assert_eq!(result.created_at, 1);
+    db.close().await.unwrap();
+}
+
+#[tokio::test]
 async fn context_pins_immutable_versions_and_deletion_removes_only_chat_content() {
     let db = Engine::memory(1024 * 1024).unwrap();
     let app = Application::new(db.clone());
@@ -58,6 +89,26 @@ async fn context_pins_immutable_versions_and_deletion_removes_only_chat_content(
         Some(first.id.clone())
     );
     let private_text = "Private prompt retained only in this conversation";
+    let oversized = db
+        .write(vec![Write {
+            statement: Mutation {
+                sql: "INSERT INTO chat_messages VALUES ('oversized',?1,1,'oversized','user',?2,1)",
+                writes: &["chat_messages"],
+            },
+            params: vec![json!(conversation.id), json!("😀".repeat(5000))],
+            expected_rows: Some(1),
+        }])
+        .await;
+    assert!(oversized.is_err());
+    assert_eq!(
+        app.chat
+            .get(&conversation.id)
+            .await
+            .unwrap()
+            .unwrap()
+            .revision,
+        0
+    );
     app.chat
         .append_user(
             &conversation.id,

@@ -55,8 +55,10 @@ export async function checkInstalledRuntime({
       assertRunning();
       const health = await status(port, "/v1/health");
       if (health !== null) {
-        if (health !== 401)
-          throw new Error(`Installed REST accepted an unauthenticated request (${health})`);
+        if (health !== 200) throw new Error(`Installed build-health request failed (${health})`);
+        const decks = await status(port, "/v1/decks");
+        if (decks !== 401)
+          throw new Error(`Installed deck data accepted an unauthenticated request (${decks})`);
         const mcp = await status(port, "/mcp", "POST");
         if (mcp !== 401)
           throw new Error(`Installed MCP failed the unauthenticated-request check (${mcp})`);

@@ -27,12 +27,16 @@ test("installed runtime requires authenticated REST and MCP and cleans up its ch
       if (mode === 'exit') process.exit(19);
       createServer((req, res) => {
         if (mode === 'silent') return;
+        if (req.url === '/v1/health') {
+          res.writeHead(mode === 'bad-health' ? 503 : 200).end('{}');
+          return;
+        }
         res.writeHead(mode === 'public' ? 200 : mode === 'bad-mcp' && req.url === '/mcp' ? 500 : 401);
         res.end('{}');
       }).listen(Number(port), '127.0.0.1');
     `,
     );
-    for (const mode of ["protected", "public", "bad-mcp", "exit", "silent"]) {
+    for (const mode of ["protected", "public", "bad-mcp", "bad-health", "exit", "silent"]) {
       const port = await availablePort();
       const options = {
         executable,
@@ -42,7 +46,11 @@ test("installed runtime requires authenticated REST and MCP and cleans up its ch
         settleMs: 20,
       };
       if (mode === "protected") await checkInstalledRuntime(options);
-      else await assert.rejects(checkInstalledRuntime(options), /unauthenticated|exited|deadline/i);
+      else
+        await assert.rejects(
+          checkInstalledRuntime(options),
+          /unauthenticated|health|exited|deadline/i,
+        );
       await assert.rejects(fetch(`http://127.0.0.1:${port}/v1/health`));
     }
   } finally {

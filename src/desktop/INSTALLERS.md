@@ -28,8 +28,9 @@ dispatch once the workflow exists on the default branch.
   spaces, verifies the installed x64 executable's product/version, launches it,
   then silently uninstalls and verifies the executable was removed.
 
-Installed-runtime checks use the actual packaged executable and require both REST
-and MCP to reject unauthenticated requests. An existing listener fails the check
+Installed-runtime checks use the actual packaged executable: public build-health
+must succeed, and deck reads and MCP must reject unauthenticated requests.
+An existing listener fails the check
 before launch. The helper terminates only its own child after the probe; this
 cleanup does not count as graceful-Quit verification. The separate native smoke
 test exercises the real React window, tray, background capture, MCP and normal Quit.

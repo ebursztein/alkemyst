@@ -42,3 +42,5 @@ impl Decks {
         Self { db }
     }
 }
+mod versions;
+pub use versions::{VersionPage, VersionSummary};

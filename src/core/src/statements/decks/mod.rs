@@ -73,3 +73,10 @@ pub const EXPORT: Statement = Statement {
     ],
     cacheable: true,
 };
+
+pub const VERSIONS: Statement = Statement {
+    name: "decks.versions",
+    sql: include_str!("versions.sql"),
+    reads: &["decks", "deck_versions", "deck_cards"],
+    cacheable: true,
+};

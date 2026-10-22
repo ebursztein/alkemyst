@@ -35,6 +35,7 @@ pub const ALLOWLIST: &[&str] = &[
     "catalogStatusGet",
     "catalogRefresh",
     "decksList",
+    "deckVersionsList",
     "decksCreate",
     "deckVersionGet",
     "deckVersionCreate",

@@ -781,6 +781,76 @@
         }
       }
     },
+    "/v1/decks/{id}/versions": {
+      "get": {
+        "tags": [
+          "decks"
+        ],
+        "summary": "List sealed immutable versions in descending creation order. Metadata and\ncard counts are aggregated by SQL; cursors remain opaque to callers.",
+        "operationId": "deckVersionsList",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 40,
+              "maximum": 100,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionPage"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/discovery": {
       "get": {
         "tags": [
@@ -5221,6 +5291,82 @@
           "states": {
             "type": "integer",
             "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "VersionPage": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VersionSummary"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "VersionSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "deck_id",
+          "ordinal",
+          "name",
+          "format",
+          "origin",
+          "created_at",
+          "main_count",
+          "sideboard_count"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "deck_id": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "main_count": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "name": {
+            "type": "string"
+          },
+          "ordinal": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "origin": {
+            "$ref": "#/components/schemas/Origin"
+          },
+          "parent_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sideboard_count": {
+            "type": "integer",
+            "format": "int32",
             "minimum": 0
           }
         }

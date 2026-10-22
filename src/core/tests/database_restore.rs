@@ -118,7 +118,7 @@ async fn invalid_or_unsupported_backups_never_replace_current_data_or_create_mis
         .unwrap();
     db.backup_to(&good).await.unwrap();
     let mut bytes = std::fs::read(&good).unwrap();
-    bytes[60..64].copy_from_slice(&10_u32.to_be_bytes());
+    bytes[60..64].copy_from_slice(&(i32::MAX as u32).to_be_bytes());
     std::fs::write(&future, bytes).unwrap();
     std::fs::write(&invalid, b"not a SQLite backup").unwrap();
     for input in [&invalid, &future, &missing] {

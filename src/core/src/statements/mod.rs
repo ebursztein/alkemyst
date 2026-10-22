@@ -10,4 +10,5 @@ pub mod comparison;
 pub(crate) mod history;
 pub(crate) mod simulations;
 
+pub(crate) mod chat;
 pub mod practice;

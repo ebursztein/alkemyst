@@ -8,6 +8,7 @@ use crate::{
 /// share one SQL worker, one result cache and one catalog refresh coordinator.
 #[derive(Clone)]
 pub struct Application {
+    pub chat: crate::chat::Chat,
     pub catalog: Catalog,
     pub practice: crate::practice::Practice,
     pub analysis: crate::analysis::Analysis,
@@ -34,6 +35,7 @@ impl Application {
 
     pub fn with_bulk_provider(db: Engine, provider: std::sync::Arc<dyn BulkProvider>) -> Self {
         Self {
+            chat: crate::chat::Chat::new(db.clone()),
             catalog: Catalog::new(db.clone()),
             practice: crate::practice::Practice::new(db.clone()),
             analysis: crate::analysis::Analysis::new(db.clone()),

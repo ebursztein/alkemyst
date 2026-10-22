@@ -65,3 +65,12 @@ test("rejects SQL hidden in an API module", () =>
     write("src/core/src/api.rs", 'let query = "SELECT name FROM decks";');
     assert.match(checkArchitecture(dir).join("\n"), /SQL literals belong in statement modules/);
   }));
+
+test("installer shell and PowerShell sources obey the same file-size limit", () =>
+  fixture((dir, write) => {
+    write("scripts/installer.sh", "# line\n".repeat(301));
+    write("scripts/installer.ps1", "# line\n".repeat(301));
+    const errors = checkArchitecture(dir).join("\n");
+    assert.match(errors, /installer\.sh: 301 lines exceeds 300/);
+    assert.match(errors, /installer\.ps1: 301 lines exceeds 300/);
+  }));

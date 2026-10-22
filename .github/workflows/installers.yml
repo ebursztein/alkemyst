@@ -1,0 +1,69 @@
+name: Preview installer verification
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "Cargo.lock"
+      - "Cargo.toml"
+      - "rust-toolchain.toml"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - ".node-version"
+      - "src/core/**"
+      - "src/landlord/**"
+      - "src/sdk/**"
+      - "src/desktop/**"
+      - "scripts/native-package.mjs"
+      - "scripts/installed-runtime.mjs"
+      - "scripts/verify-*-install.*"
+      - ".github/workflows/installers.yml"
+permissions:
+  contents: read
+concurrency:
+  group: installers-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  installers:
+    name: Install preview (${{ matrix.os }})
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - run: npm install --global pnpm@10.33.2
+      - run: pnpm install --frozen-lockfile
+      - run: rustup target add ${{ matrix.target }}
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: rust-installers-${{ matrix.target }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: rust-installers-${{ matrix.target }}-
+      - run: pnpm native:package
+      - name: Verify macOS copy installation
+        if: runner.os == 'macOS'
+        run: bash scripts/verify-macos-install.sh work/packages/${{ matrix.target }}
+      - name: Verify Windows silent installation and uninstall
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/verify-windows-install.ps1 -Packages work/packages/${{ matrix.target }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success()
+        with:
+          name: preview-${{ matrix.target }}
+          path: work/packages/${{ matrix.target }}/
+          if-no-files-found: error
+          retention-days: 14

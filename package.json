@@ -25,6 +25,7 @@
     "gate:probes": "node scripts/gate-zero-probes.mjs",
     "api:lint": "redocly lint src/sdk/schema/openapi.json",
     "native:build": "node scripts/native-build.mjs",
+    "native:package": "node scripts/native-package.mjs",
     "test:site": "playwright test --config playwright.site.config.ts"
   },
   "devDependencies": {

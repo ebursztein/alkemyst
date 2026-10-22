@@ -12,7 +12,18 @@ const ignored = new Set([
   ".sprinty",
   ".astro",
 ]);
-const extensions = new Set([".rs", ".ts", ".tsx", ".js", ".mjs", ".astro", ".sql", ".css"]);
+const extensions = new Set([
+  ".rs",
+  ".ts",
+  ".tsx",
+  ".js",
+  ".mjs",
+  ".astro",
+  ".sql",
+  ".css",
+  ".sh",
+  ".ps1",
+]);
 const normalized = (path) => path.split(sep).join("/");
 
 function files(dir) {

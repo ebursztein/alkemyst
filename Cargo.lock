@@ -38,6 +38,7 @@ dependencies = [
  "axum",
  "flate2",
  "jsonschema",
+ "landlord",
  "manasight-parser",
  "reqwest",
  "rmcp",

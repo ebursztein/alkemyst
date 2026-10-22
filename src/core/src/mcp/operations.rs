@@ -11,6 +11,34 @@ use serde_json::{Value, json};
 
 pub async fn invoke(app: &Application, name: &str, args: Value) -> Result<Value, ApiError> {
     match name {
+        "simulationsCreate" => {
+            let c: crate::api::CreateSimulationCommand = decode(args)?;
+            encode(
+                app.analysis
+                    .submit_simulation(&c.idempotency_key, c.input, Origin::Agent)
+                    .await?,
+            )
+        }
+        "simulationsList" => encode(app.analysis.simulations(decode(args)?).await?),
+        "simulationGet" => encode(
+            app.analysis
+                .simulation(&string(&args, "id")?)
+                .await?
+                .ok_or_else(ApiError::missing)?,
+        ),
+        "simulationInputsGet" => encode(
+            app.analysis
+                .simulation_inputs(&string(&args, "id")?)
+                .await?
+                .ok_or_else(ApiError::missing)?,
+        ),
+        "simulationCancel" => encode(
+            app.analysis
+                .cancel_simulation(&string(&args, "id")?, Origin::Agent)
+                .await?,
+        ),
+        "probabilityDraw" => encode(crate::analysis::probabilities::draw(decode(args)?)?),
+        "probabilityJoint" => encode(crate::analysis::probabilities::joint(decode(args)?)?),
         "analysisProfileGet" => encode(
             app.analysis
                 .profile(&string(&args, "id")?)

@@ -7,3 +7,4 @@ pub(crate) mod capture;
 
 pub(crate) mod analysis;
 pub(crate) mod history;
+pub(crate) mod simulations;

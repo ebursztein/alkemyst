@@ -196,5 +196,13 @@ explicit match-clock evidence, not a reconstructed game-start timestamp. Event
 printed mana curve, source counts, catalog/compiler versions and per-card model
 support. The generated SDK exposes the same operation. Missing cards and unknown
 rules remain explicit even when curves can be displayed. The compiler keeps the
-resolved immutable input for subsequent simulation jobs; persisted job operations
-are the next backend slice. See [compiler boundaries](src/core/src/analysis/compiler/README.md).
+resolved immutable input for persisted simulation jobs. See [compiler boundaries](src/core/src/analysis/compiler/README.md).
+
+## Simulation jobs
+
+The local API now queues seeded simulations with frozen inputs and durable
+progress. REST, the generated SDK and MCP expose creation, status, listing,
+inputs and cancellation; exact draw/joint probability endpoints are separate.
+Seeds are hexadecimal strings to preserve every bit in JavaScript. See
+[job semantics](src/core/src/analysis/jobs/README.md) for scope, replay versions,
+cancellation, recovery and sampling intervals.

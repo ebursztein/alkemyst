@@ -378,6 +378,121 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/probabilities/draw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Exact finite-deck draw probability without replacement. This is not a
+         *     battlefield, tutor, mulligan or Arena smoothing model.
+         */
+        post: operations["probabilityDraw"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/probabilities/joint": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Exact joint draw probability across mutually exclusive categories covering
+         *     the whole deck. Split overlapping groups into intersection categories first.
+         */
+        post: operations["probabilityJoint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/simulations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List persisted simulation jobs in stable creation order using opaque cursors. */
+        get: operations["simulationsList"];
+        put?: never;
+        /**
+         * Queue a seeded local simulation. Inputs and model versions are frozen before
+         *     execution; retries with the same key return the original job.
+         */
+        post: operations["simulationsCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/simulations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read durable progress and results. A missing report means no completed trials. */
+        get: operations["simulationGet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/simulations/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request cancellation. Bounded batches preserve completed-trial denominators;
+         *     cancelling an already terminal job is an idempotent read of its final state.
+         */
+        post: operations["simulationCancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/simulations/{id}/inputs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the frozen card metadata and parameters used by a job, not today's catalog. */
+        get: operations["simulationInputsGet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/statistics": {
         parameters: {
             query?: never;
@@ -476,6 +591,15 @@ export interface components {
             snapshot_id?: string | null;
             source?: null | components["schemas"]["CatalogSource"];
         };
+        Category: {
+            label: string;
+            /** Format: int32 */
+            max: number;
+            /** Format: int32 */
+            min: number;
+            /** Format: int32 */
+            population: number;
+        };
         Counts: {
             /** Format: int32 */
             creatures: number;
@@ -505,6 +629,10 @@ export interface components {
             idempotency_key: string;
             input: components["schemas"]["NewNote"];
         };
+        CreateSimulationCommand: {
+            idempotency_key: string;
+            input: components["schemas"]["SimulationParameters"];
+        };
         CreateVersionCommand: {
             idempotency_key: string;
             input: components["schemas"]["NewVersion"];
@@ -525,6 +653,17 @@ export interface components {
         DeckPage: {
             items: components["schemas"]["DeckSummary"][];
             next_cursor?: string | null;
+        };
+        DeckSnapshot: {
+            cards: components["schemas"]["ResolvedCard"][];
+            catalog_snapshot?: string | null;
+            catalog_updated_at?: string | null;
+            counts: components["schemas"]["Counts"];
+            curve: components["schemas"]["CurveBin"][];
+            deck_id: string;
+            format: string;
+            name: string;
+            version_id: string;
         };
         DeckSummary: {
             format: string;
@@ -556,8 +695,39 @@ export interface components {
             operations: string[];
             version: string;
         };
+        DrawProbability: {
+            /** Format: int32 */
+            draws: number;
+            /** Format: int32 */
+            max: number;
+            /** Format: int32 */
+            min: number;
+            /** Format: int32 */
+            population: number;
+            /** Format: int32 */
+            successes: number;
+        };
         /** @enum {string} */
-        ErrorCode: "unauthorized" | "forbidden" | "invalid_request" | "not_found" | "conflict" | "unresolved_cards" | "busy" | "internal";
+        ErrorCode: "unauthorized" | "forbidden" | "invalid_request" | "not_found" | "conflict" | "unresolved_cards" | "unsupported_model" | "busy" | "internal";
+        /** @description Wilson score interval, with explicit numerator and denominator. */
+        Estimate: {
+            interval95: number[];
+            /** Format: double */
+            probability: number;
+            /** Format: int32 */
+            samples: number;
+            /** Format: int32 */
+            successes: number;
+        };
+        ExactProbability: {
+            /** Format: int32 */
+            draws: number;
+            method: components["schemas"]["ProbabilityMethod"];
+            /** Format: int32 */
+            population: number;
+            /** Format: double */
+            probability: number;
+        };
         GamePage: {
             items: components["schemas"]["GameSummary"][];
             next_cursor?: string | null;
@@ -602,6 +772,11 @@ export interface components {
             /** Format: int64 */
             turns_observed: number;
         };
+        Goal: {
+            attached: number;
+            attack_ready: number;
+            equipment: number;
+        };
         ImportDeck: {
             format: string;
             name: string;
@@ -618,6 +793,21 @@ export interface components {
         };
         /** @enum {string} */
         IssueCode: "missing_card" | "invalid_metadata" | "unsupported_cost" | "unknown_rules" | "rules_changed" | "unsupported_layout" | "combat_excluded" | "recursion_excluded" | "activated_ability_excluded" | "ignored_card";
+        JobPage: {
+            items: components["schemas"]["SimulationJob"][];
+            next_cursor?: string | null;
+        };
+        /** @enum {string} */
+        JobStatus: "queued" | "running" | "cancelling" | "completed" | "cancelled" | "failed" | "interrupted";
+        JointProbability: {
+            /**
+             * @description Mutually exclusive categories covering the whole deck, including other cards.
+             *     Split overlapping groups into explicit intersections before using this model.
+             */
+            categories: components["schemas"]["Category"][];
+            /** Format: int32 */
+            draws: number;
+        };
         /** @enum {string} */
         MatchMode: "bo1" | "bo3" | "unknown";
         MatchPage: {
@@ -637,6 +827,19 @@ export interface components {
         };
         /** @enum {string} */
         MissingData: "initial_state" | "terminal_result" | "state_gap" | "unverifiable_chain" | "truncated" | "connection" | "deck_version" | "local_seat" | "conflicting_result" | "outcome";
+        /** @enum {string} */
+        ModelScope: "precombat_goldfish";
+        MulliganParameters: {
+            /** Format: int32 */
+            force_mulligans: number;
+            /** Format: int32 */
+            max_lands: number;
+            /** Format: int32 */
+            min_lands: number;
+            /** Format: int32 */
+            minimum_keep: number;
+            required_references: string[];
+        };
         NewNote: {
             body: string;
             deck_id: string;
@@ -666,6 +869,8 @@ export interface components {
         ObservedOutcome: "won" | "lost" | "draw";
         /** @enum {string} */
         Origin: "user" | "agent" | "arena" | "import";
+        /** @enum {string} */
+        ProbabilityMethod: "hypergeometric" | "multivariate_hypergeometric";
         Problem: {
             code: components["schemas"]["ErrorCode"];
             message: string;
@@ -695,6 +900,13 @@ export interface components {
         References: {
             references: string[];
         };
+        ResolvedCard: {
+            data?: unknown;
+            /** Format: int32 */
+            quantity: number;
+            reference: string;
+            zone: components["schemas"]["Zone"];
+        };
         SampleBreakdown: {
             /** Format: int64 */
             draws: number;
@@ -722,6 +934,66 @@ export interface components {
             /** @description Plain text tokens across names, rules text and types. Not raw FTS syntax. */
             text?: string;
             type_line?: string | null;
+        };
+        SimulationInputs: {
+            parameters: components["schemas"]["SimulationParameters"];
+            profile: components["schemas"]["Profile"];
+            snapshot: components["schemas"]["DeckSnapshot"];
+        };
+        SimulationJob: {
+            cancellation_origin?: null | components["schemas"]["Origin"];
+            catalog_snapshot?: string | null;
+            compiler_version: string;
+            /** Format: int32 */
+            completed_runs: number;
+            /** Format: int64 */
+            created_at: number;
+            error_code?: string | null;
+            id: string;
+            model_version: string;
+            origin: components["schemas"]["Origin"];
+            parameters: components["schemas"]["SimulationParameters"];
+            policy_version: string;
+            replay_version: string;
+            report?: null | components["schemas"]["SimulationReport"];
+            /** Format: int32 */
+            requested_runs: number;
+            seed: string;
+            status: components["schemas"]["JobStatus"];
+            /** Format: int64 */
+            updated_at: number;
+            version_id: string;
+        };
+        SimulationParameters: {
+            goal: components["schemas"]["Goal"];
+            mulligan: components["schemas"]["MulliganParameters"];
+            on_the_play: boolean;
+            /** Format: int32 */
+            runs: number;
+            scope: components["schemas"]["ModelScope"];
+            /** @description Full-width hexadecimal seed. Omit to generate and persist a random seed. */
+            seed?: string | null;
+            /** Format: int32 */
+            turns: number;
+            version_id: string;
+        };
+        SimulationReport: {
+            /** Format: int32 */
+            completed_runs: number;
+            /** Format: int32 */
+            forced_keeps: number;
+            goal: components["schemas"]["Goal"];
+            /** Format: double */
+            mean_mulligans: number;
+            /** Format: double */
+            mean_opening_size: number;
+            model_version: string;
+            policy: string;
+            replay_version: string;
+            /** Format: int32 */
+            requested_runs: number;
+            seed: string;
+            turns: components["schemas"]["TurnEstimate"][];
         };
         SourceCount: {
             color: string;
@@ -806,6 +1078,32 @@ export interface components {
             next_cursor?: string | null;
             /** Format: int64 */
             through_ordinal: number;
+        };
+        TurnEstimate: {
+            attached: components["schemas"]["Estimate"];
+            attack_ready: components["schemas"]["Estimate"];
+            /** Format: int32 */
+            decked: number;
+            equipment: components["schemas"]["Estimate"];
+            joint: components["schemas"]["Estimate"];
+            /** Format: double */
+            mean_cards_discarded: number;
+            /** Format: double */
+            mean_cards_drawn: number;
+            /** Format: double */
+            mean_creatures: number;
+            /** Format: double */
+            mean_equipment: number;
+            /** Format: double */
+            mean_legendary_bricks: number;
+            /** Format: double */
+            mean_life: number;
+            /** Format: double */
+            mean_tutors_cast: number;
+            /** Format: int32 */
+            story_samples: number;
+            /** Format: int32 */
+            turn: number;
         };
         TurnPage: {
             game_id: string;
@@ -1734,6 +2032,273 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Note"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    probabilityDraw: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DrawProbability"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExactProbability"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    probabilityJoint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JointProbability"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExactProbability"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    simulationsList: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+                version_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobPage"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    simulationsCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSimulationCommand"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimulationJob"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    simulationGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimulationJob"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    simulationCancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimulationJob"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    simulationInputsGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimulationInputs"];
                 };
             };
             "4XX": {

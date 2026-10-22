@@ -102,7 +102,18 @@ pub struct TurnSnapshot {
     pub searches_resolved: usize,
     pub decked: bool,
 }
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    serde::Serialize,
+    serde::Deserialize,
+    utoipa::ToSchema,
+)]
+#[serde(deny_unknown_fields)]
 pub struct Goal {
     pub equipment: usize,
     pub attached: usize,

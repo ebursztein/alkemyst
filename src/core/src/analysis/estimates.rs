@@ -1,5 +1,5 @@
 /// Wilson score interval, with explicit numerator and denominator.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct Estimate {
     pub successes: u32,
     pub samples: u32,

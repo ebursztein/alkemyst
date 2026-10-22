@@ -1,9 +1,9 @@
-use super::{analysis, cards, decks, discovery, history, notes};
+use super::{analysis, cards, decks, discovery, history, notes, probabilities, simulations};
 use utoipa::OpenApi;
 
 #[derive(OpenApi)]
 #[openapi(
-    paths(analysis::profile,crate::health::build_info, discovery::get, history::games,history::game,history::timeline,history::turns,history::matches,history::match_detail,history::statistics,history::capture,
+    paths(simulations::create,simulations::list,simulations::get,simulations::inputs,simulations::cancel,probabilities::draw,probabilities::joint,analysis::profile,crate::health::build_info, discovery::get, history::games,history::game,history::timeline,history::turns,history::matches,history::match_detail,history::statistics,history::capture,
         decks::list,decks::create,decks::version,decks::create_version,decks::import,decks::export,
         notes::list,notes::create,cards::search,cards::get,cards::arena,cards::references,cards::status,cards::refresh),
     modifiers(&Security), security(("localBearer"=[])),

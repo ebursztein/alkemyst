@@ -24,3 +24,6 @@ pub const HISTORY_SUMMARIES: &str = include_str!("../../migrations/007_history_s
 
 pub const HISTORY_MATCH_FACTS: &str = include_str!("../../migrations/007_history_match_facts.sql");
 pub const HISTORY_MATCHES: &str = include_str!("../../migrations/007_history_matches.sql");
+
+pub const SIMULATIONS: &str = include_str!("../../migrations/008_simulations.sql");
+pub const SIMULATION_DETAILS: &str = include_str!("../../migrations/008_simulation_details.sql");

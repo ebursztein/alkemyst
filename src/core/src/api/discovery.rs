@@ -37,6 +37,8 @@ pub(crate) fn discover() -> Discovery {
         capabilities: vec![
             "cards",
             "analysis",
+            "simulations",
+            "exact_probabilities",
             "decks",
             "versions",
             "notes",

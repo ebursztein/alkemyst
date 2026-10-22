@@ -23,7 +23,7 @@ impl Worker {
         connection.busy_timeout(Duration::from_secs(5))?;
         connection.execute_batch(system::CONFIGURE)?;
         let version: i64 = connection.query_row(system::SCHEMA_VERSION, [], |row| row.get(0))?;
-        if version > 7 {
+        if version > 8 {
             return Err(Error::FutureSchema);
         }
         if version == 0 {
@@ -63,6 +63,12 @@ impl Worker {
             transaction.execute_batch(system::HISTORY_FACTS)?;
             transaction.execute_batch(system::HISTORY_SUMMARIES)?;
             transaction.execute_batch(system::HISTORY_MATCHES)?;
+            transaction.commit()?;
+        }
+        if version < 8 {
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(system::SIMULATIONS)?;
+            transaction.execute_batch(system::SIMULATION_DETAILS)?;
             transaction.commit()?;
         }
         let table_revisions = connection

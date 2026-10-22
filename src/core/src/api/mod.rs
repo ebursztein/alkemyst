@@ -8,9 +8,12 @@ mod history;
 mod models;
 mod notes;
 mod openapi;
+mod probabilities;
 mod server;
+mod simulations;
 pub use openapi::ApiDoc;
 pub use server::RunningServer;
+pub(crate) use simulations::CreateSimulationCommand;
 pub mod problem;
 
 use crate::Application;
@@ -45,6 +48,15 @@ pub(super) fn router_with_mcp(
     let state = AppState { app, auth };
     let protected = Router::new()
         .nest_service("/mcp", mcp)
+        .route(
+            "/v1/simulations",
+            get(simulations::list).post(simulations::create),
+        )
+        .route("/v1/simulations/{id}", get(simulations::get))
+        .route("/v1/simulations/{id}/inputs", get(simulations::inputs))
+        .route("/v1/simulations/{id}/cancel", post(simulations::cancel))
+        .route("/v1/probabilities/draw", post(probabilities::draw))
+        .route("/v1/probabilities/joint", post(probabilities::joint))
         .route("/v1/games", get(history::games))
         .route("/v1/games/{id}", get(history::game))
         .route("/v1/games/{id}/events", get(history::timeline))

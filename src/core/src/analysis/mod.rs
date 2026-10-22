@@ -6,3 +6,6 @@ pub use estimates::Estimate;
 mod snapshot;
 pub use snapshot::{Analysis, Counts, CurveBin, DeckSnapshot, Error, ResolvedCard};
 pub mod compiler;
+pub mod jobs;
+pub mod probabilities;
+mod seed;

@@ -1,4 +1,4 @@
-use super::{Error, Result};
+use super::{Error, Result, migrations};
 use crate::statements::system;
 use rusqlite::{Connection, OpenFlags};
 use std::{collections::BTreeMap, io, path::Path, time::Duration};
@@ -45,16 +45,35 @@ fn checked(
     // SQLite omits CHECK expressions when loading a read-only B-tree. Open only
     // our private copy read/write, then prohibit writes through query_only so
     // integrity_check also evaluates the persisted CHECK constraints.
-    let candidate = Connection::open(temporary.path())?;
+    let mut candidate = Connection::open(temporary.path())?;
     candidate.execute_batch(system::BACKUP_READ_ONLY)?;
     let expected: i64 = current.query_row(system::SCHEMA_VERSION, [], |row| row.get(0))?;
     let actual: i64 = candidate.query_row(system::SCHEMA_VERSION, [], |row| row.get(0))?;
     if actual > expected {
         return Err(Error::FutureSchema);
     }
-    if actual != expected || schema(&candidate)? != schema(current)? {
+    if actual < 1 {
         return Err(Error::InvalidBackup("unsupported database schema"));
     }
+    if actual < expected {
+        if migrations::schema(&candidate)? != migrations::known_schema(actual)? {
+            return Err(Error::InvalidBackup("unsupported legacy database schema"));
+        }
+        validate_data(&candidate)?;
+        candidate.execute_batch(system::BACKUP_UPGRADE)?;
+        migrations::apply_to(&mut candidate, expected)?;
+        candidate.execute_batch(system::BACKUP_READ_ONLY)?;
+    }
+    if migrations::schema(&candidate)? != migrations::schema(current)? {
+        return Err(Error::InvalidBackup("unsupported database schema"));
+    }
+    validate_data(&candidate)?;
+    drop(candidate);
+    temporary.as_file().sync_all()?;
+    Ok(temporary)
+}
+
+fn validate_data(candidate: &Connection) -> Result<()> {
     let integrity = candidate
         .prepare(system::BACKUP_INTEGRITY)?
         .query_map([], |row| row.get::<_, String>(0))?
@@ -70,8 +89,7 @@ fn checked(
     {
         return Err(Error::InvalidBackup("foreign key check failed"));
     }
-    drop(candidate);
-    Ok(temporary)
+    Ok(())
 }
 
 fn read_only(path: &Path) -> Result<Connection> {
@@ -79,13 +97,6 @@ fn read_only(path: &Path) -> Result<Connection> {
     connection.busy_timeout(Duration::from_secs(5))?;
     connection.execute_batch(system::BACKUP_READ_ONLY)?;
     Ok(connection)
-}
-
-fn schema(connection: &Connection) -> Result<Vec<String>> {
-    Ok(connection
-        .prepare(system::BACKUP_SCHEMA)?
-        .query_map([], |row| row.get(0))?
-        .collect::<std::result::Result<_, _>>()?)
 }
 
 fn available(destination: &Path) -> Result<()> {

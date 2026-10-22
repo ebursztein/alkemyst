@@ -31,6 +31,7 @@ pub const SIMULATION_DETAILS: &str = include_str!("../../migrations/008_simulati
 pub const PRACTICE: &str = include_str!("../../migrations/009_practice.sql");
 
 pub const BACKUP_READ_ONLY: &str = "PRAGMA trusted_schema=OFF; PRAGMA query_only=ON;";
+pub const BACKUP_UPGRADE: &str = "PRAGMA query_only=OFF; PRAGMA foreign_keys=ON;";
 pub const BACKUP_INTEGRITY: &str = "PRAGMA integrity_check";
 pub const BACKUP_FOREIGN_KEYS: &str = "PRAGMA foreign_key_check";
 pub const BACKUP_SCHEMA: &str = "SELECT json_array(type, name, tbl_name, sql)

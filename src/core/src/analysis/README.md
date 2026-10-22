@@ -13,14 +13,19 @@ results. Reports distinguish requested and completed trials and include Wilson
 
 ## Supported explicit effects
 
-- One land per turn, untap at turn start, normal play/draw opening draw rules.
+- One land per turn, including a still-unused drop after a mid-turn draw; untap
+  at turn start and normal play/draw opening draw rules.
 - One mana per available source; colored, generic, explicit colorless and
-  two-color hybrid payment use landlord's maximum bipartite matching.
+  two-color hybrid payment use landlord's maximum bipartite matching. Alternative
+  abilities on one source combine available colors without producing extra mana.
 - Tapped, check-type, fast, slow and life-payment land entry conditions. Basic
   land types are separate from the colors a source produces. Life starts at 20;
-  the policy pays life only when it would remain above zero.
+  the policy pays life only when it would remain above zero. Equipment-dependent
+  entry and conditional color-producing abilities are evaluated separately.
 - Artifact-, Equipment- and creature-spell-only sources. Spell-only mana cannot
-  pay equip abilities. Resources spent on a tutor cannot also cast its target.
+  pay equip abilities. An Equipment-or-equip restriction can pay either operation.
+  Creature mana abilities respect summoning sickness; tapping a creature removes
+  attack readiness. Resources spent on a tutor cannot also cast its target.
 - Permanent Equipment and creatures, haste, normal mana-only equip abilities,
   Equipment searches to hand or battlefield with optional printed-mana-value
   limits, and shuffle after a search. Search effects explicitly distinguish spell
@@ -28,17 +33,30 @@ results. Reports distinguish requested and completed trials and include Wilson
   modeled entry effects. Creature tutors retain their body even without a target.
 - Legendary duplicate avoidance uses logical card identity; repeated copies do
   not inflate battlefield counts. Observed extra legendary copies remain visible
-  as bricks. The card compiler must assign identities by modeled named object,
+  as bricks. Fresh Adventure copies retain their spell utility; extra front
+  copies stranded in Adventure exile still contribute to duplicate counts. The card compiler must assign identities by modeled named object,
   independently of printing identifiers.
+
+- Target-color and target-specific generic equip discounts, worthy-only equip
+  activations, first free equip with an enduring story, and optional automatic
+  attachment effects. Legendary artifacts count once toward story, and automatic
+  attachment bypasses activation-only target restrictions.
+- Top-N Equipment/Dwarf selection bottoms unselected cards in random order and
+  does not shuffle untouched library cards. The policy never peeks at unseen
+  top cards to decide whether to cast a selection spell.
+- Once-per-turn entry draws, optional discard-then-draw, and Adventure search
+  spells followed by casting the permanent from exile. Failing a required draw
+  stops the trial's remaining actions.
 
 ## Policy and interpretation
 
-The explicit `priority-greedy-v1` policy chooses a land enabling the highest
+The explicit `priority-greedy-v2` policy chooses a land enabling the highest
 priority affordable spell, then casts by priority, normalized cast cost, and
 identity. It prefers restricted sources when paying. Tutors prefer higher-priority,
 cheaper Equipment without knowingly fetching another legendary duplicate. After
 casting, it attaches affordable Equipment to a creature already eligible to attack
-when available. It does not search all legal play sequences or claim optimal play.
+when available, respecting target restrictions and discounts. It spends a free
+first activation on an expensive equip before a zero-cost ability. It does not search all legal play sequences or claim optimal play.
 
 An equip ability can be used the turn Equipment enters; a creature cannot attack
 until a later turn unless it has haste. Several Equipment may attach to one
@@ -51,6 +69,12 @@ multiplying marginal probabilities. Per-turn events are evaluated at the end of
 the modeled main phase. A required draw from an empty library sets `decked`; that
 trial does not satisfy a live battlefield goal for that or later turns.
 
+Owned entry draws resolve oldest source first, before the incoming permanent's
+search effect. Discard choices are explicit: always choose the lowest priority
+card, or only discard ignored cards and known extra legends. A search finishes
+shuffling/bottoming before its fetched permanent's entry effects resolve. These
+are named controller choices, rather than an optimal trigger-order solver.
+
 Printed mana value, a chosen cast cost and an equip ability cost are distinct
 inputs. A battlefield tutor bypasses casting its target but still applies its
 printed-value search limit. Exact tiny scenarios, joint multivariate draws, and
@@ -60,8 +84,8 @@ free-Equipment draw cases anchor the seeded Monte Carlo tests.
 
 The current explicit model has no opponent, combat resolution, removal, blockers,
 trigger stack, non-mana payments, free mulligan, or Arena smoothing. Equipment
-creatures/reconfigure, alternate spell modes, ramp/Treasure, multi-mana sources,
-other triggered tutoring, cost reductions, auto-attachment, and other interactions need
+creatures/reconfigure, modes beyond the modeled Adventure, Treasure/multi-mana
+sources, combat-dependent draws, graveyard recursion, and other interactions need
 specific modeled effects. Inconsistent abilities fail validation. The application
 compiler must present unsupported interactions and assumptions before running a
 scenario; drawing a card alone is never treated as casting it.

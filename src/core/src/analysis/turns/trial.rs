@@ -10,16 +10,24 @@ pub(super) struct Permanent {
     pub entered: u8,
     pub tapped: bool,
     pub attached_to: Option<usize>,
+    pub draw_triggered_turn: u8,
 }
 /// Explicit priority-greedy play, then equipment attachment. It assumes no
 /// opponent interaction and does not claim to find the optimal play sequence.
 pub struct Trial {
     pub(super) deck: Arc<[CardSpec]>,
     pub(super) hand: Vec<usize>,
+    pub(super) graveyard: Vec<usize>,
+    pub(super) adventure_exile: Vec<usize>,
+    pub(super) cards_drawn: usize,
+    pub(super) cards_discarded: usize,
     pub(super) library: VecDeque<usize>,
     pub(super) battlefield: Vec<Permanent>,
     pub(super) turn: u8,
     pub(super) life: u8,
+    pub(super) enduring_story: bool,
+    pub(super) first_equip_used: bool,
+    pub(super) land_played: bool,
     pub(super) on_the_play: bool,
     pub(super) decked: bool,
     pub(super) spells_cast: usize,
@@ -57,35 +65,7 @@ impl Trial {
                     "conflicting definitions for one card identity".into(),
                 ));
             }
-            match &card.kind {
-                Kind::Spell(s)
-                    if (s.equipment
-                        && (!s.artifact
-                            || !s.permanent
-                            || s.creature
-                            || s.equip_cost.is_none()))
-                        || (s.equip_cost.is_some() != s.equipment)
-                        || ((s.artifact || s.creature) && !s.permanent)
-                        || (s.haste && !s.creature)
-                        || (!s.permanent
-                            && s.tutor
-                                .as_ref()
-                                .is_some_and(|t| t.timing == TutorTiming::EnterBattlefield))
-                        || (card.legendary && !s.permanent) =>
-                {
-                    return Err(Error::Configuration(
-                        "unsupported or inconsistent spell properties".into(),
-                    ));
-                }
-                Kind::Land(l)
-                    if card.cost.mana_value() != 0
-                        || l.basic_types > 31
-                        || matches!(l.enters,Enters::HasBasicType(mask) if mask==0 || mask>31) =>
-                {
-                    return Err(Error::Configuration("invalid modeled land".into()));
-                }
-                _ => {}
-            }
+            super::validation::card(card)?;
         }
         Ok(Self::from_sampled(
             deck,
@@ -108,10 +88,17 @@ impl Trial {
         Self {
             deck,
             hand: hand.kept,
+            graveyard: vec![],
+            adventure_exile: vec![],
+            cards_drawn: 0,
+            cards_discarded: 0,
             library: hand.library.into(),
             battlefield: vec![],
             turn: 0,
             life: 20,
+            enduring_story: false,
+            first_equip_used: false,
+            land_played: false,
             on_the_play,
             decked: false,
             spells_cast: 0,
@@ -130,20 +117,28 @@ impl Trial {
         self.spells_cast = 0;
         self.tutors_cast = 0;
         self.searches_resolved = 0;
+        self.first_equip_used = false;
+        self.land_played = false;
+        self.cards_drawn = 0;
+        self.cards_discarded = 0;
         for permanent in &mut self.battlefield {
             permanent.tapped = false;
         }
         if !(self.decked || self.on_the_play && self.turn == 1) {
-            if let Some(card) = self.library.pop_front() {
-                self.hand.push(card);
-            } else {
-                self.decked = true;
-            }
+            self.draw_card();
         }
         if !self.decked {
-            self.play_land();
-            self.cast_spells(rng);
-            self.attach_equipment();
+            loop {
+                let casts = self.spells_cast;
+                self.play_land();
+                self.cast_spells(rng);
+                if self.decked || self.land_played || self.spells_cast == casts {
+                    break;
+                }
+            }
+            if !self.decked {
+                self.attach_equipment();
+            }
         }
         Ok(self.snapshot())
     }
@@ -160,10 +155,24 @@ impl Trial {
             entered: self.turn,
             tapped,
             attached_to: None,
+            draw_triggered_turn: 0,
         });
+        self.enduring_story |= self
+            .battlefield
+            .iter()
+            .filter(|p| {
+                let card = &self.deck[p.card];
+                card.legendary
+                    || card.tags.saga
+                    || matches!(&card.kind,Kind::Spell(s) if s.artifact)
+            })
+            .count()
+            >= 3;
+        self.entry_attachments(card);
+        self.entry_draws(card);
     }
     pub(super) fn ready(&self, card: usize) -> bool {
-        self.battlefield.iter().find(|p|p.card==card).is_some_and(|p| matches!(&self.deck[card].kind,Kind::Spell(s) if s.creature && (s.haste || p.entered<self.turn)))
+        self.battlefield.iter().find(|p|p.card==card).is_some_and(|p| matches!(&self.deck[card].kind,Kind::Spell(s) if s.creature && !p.tapped && (s.haste || p.entered<self.turn)))
     }
     fn snapshot(&self) -> TurnSnapshot {
         let equipment: Vec<_> = self
@@ -176,6 +185,8 @@ impl Trial {
             .hand
             .iter()
             .copied()
+            .filter(|i| self.deck[*i].adventure.is_none())
+            .chain(self.adventure_exile.iter().copied())
             .chain(self.battlefield.iter().map(|p| p.card))
         {
             if self.deck[card].legendary {
@@ -185,12 +196,21 @@ impl Trial {
         TurnSnapshot {
             turn: self.turn,
             life: self.life,
+            enduring_story: self.enduring_story,
             lands: self
                 .battlefield
                 .iter()
                 .filter(|p| matches!(self.deck[p.card].kind, Kind::Land(_)))
                 .count(),
             equipment: equipment.len(),
+            adventure_exile: self.adventure_exile.len(),
+            creatures: self
+                .battlefield
+                .iter()
+                .filter(|p| matches!(&self.deck[p.card].kind,Kind::Spell(s) if s.creature))
+                .count(),
+            cards_drawn: self.cards_drawn,
+            cards_discarded: self.cards_discarded,
             attached: equipment.iter().filter(|p| p.attached_to.is_some()).count(),
             attack_ready: equipment
                 .iter()

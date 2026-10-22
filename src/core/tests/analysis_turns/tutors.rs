@@ -9,6 +9,8 @@ fn creature_tutor_can_be_cast_for_its_body_without_a_search_target() {
         unreachable!()
     };
     s.tutor = Some(TutorSpec {
+        scope: SearchScope::Library,
+        types: SearchTypes::Equipment,
         destination: Destination::Hand,
         max_mana_value: None,
         timing: TutorTiming::EnterBattlefield,
@@ -32,6 +34,8 @@ fn battlefield_entries_trigger_searches_but_do_not_trigger_spell_resolution_effe
             unreachable!()
         };
         s.tutor = Some(TutorSpec {
+            scope: SearchScope::Library,
+            types: SearchTypes::Equipment,
             destination: Destination::Battlefield,
             max_mana_value: Some(0),
             timing,

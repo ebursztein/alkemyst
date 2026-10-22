@@ -12,11 +12,14 @@ pub fn land(id: u32, colors: &[Color]) -> CardSpec {
         printed_mana_value: 0,
         legendary: false,
         keep_priority: 0,
+        tags: Default::default(),
+        adventure: None,
         kind: Kind::Land(LandSpec {
             source: Source::new(colors).unwrap(),
             enters: Enters::Untapped,
             restriction: Restriction::Any,
             basic_types: 0,
+            conditional: vec![],
         }),
     }
 }
@@ -27,6 +30,8 @@ pub fn equipment(id: u32, mana: &str, equip: &str) -> CardSpec {
         printed_mana_value: cost(mana).mana_value() as u16,
         legendary: false,
         keep_priority: 0,
+        tags: Default::default(),
+        adventure: None,
         kind: Kind::Spell(SpellSpec {
             permanent: true,
             artifact: true,
@@ -43,6 +48,8 @@ pub fn creature(id: u32, mana: &str, haste: bool) -> CardSpec {
         printed_mana_value: cost(mana).mana_value() as u16,
         legendary: false,
         keep_priority: 0,
+        tags: Default::default(),
+        adventure: None,
         kind: Kind::Spell(SpellSpec {
             permanent: true,
             creature: true,
@@ -58,8 +65,12 @@ pub fn tutor(id: u32, mana: &str, destination: Destination, max: Option<u16>) ->
         printed_mana_value: cost(mana).mana_value() as u16,
         legendary: false,
         keep_priority: 0,
+        tags: Default::default(),
+        adventure: None,
         kind: Kind::Spell(SpellSpec {
             tutor: Some(TutorSpec {
+                scope: SearchScope::Library,
+                types: SearchTypes::Equipment,
                 timing: TutorTiming::SpellResolves,
                 destination,
                 max_mana_value: max,
@@ -76,6 +87,8 @@ pub fn trial(mut cards: Vec<CardSpec>, opening: Vec<usize>, play: bool) -> Trial
         printed_mana_value: 0,
         legendary: false,
         keep_priority: 0,
+        tags: Default::default(),
+        adventure: None,
         kind: Kind::Ignored,
     }));
     let mut library = (0..cards.len())

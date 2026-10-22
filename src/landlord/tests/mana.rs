@@ -92,3 +92,29 @@ fn upstream_adeliz_and_clarion_regressions_use_injected_sources() {
             .is_some()
     );
 }
+
+#[test]
+fn alternative_source_abilities_combine_colors_but_still_produce_one_unit() {
+    use Color::*;
+    let source = source(&[White]).union(source(&[Red]));
+    assert!(ManaCost::parse("{R}").unwrap().payment(&[source]).is_some());
+    assert!(ManaCost::parse("{W}").unwrap().payment(&[source]).is_some());
+    assert!(
+        ManaCost::parse("{W}{R}")
+            .unwrap()
+            .payment(&[source])
+            .is_none()
+    );
+}
+
+#[test]
+fn generic_reductions_never_remove_colored_requirements() {
+    let cost = ManaCost::parse("{3}{R}").unwrap();
+    assert_eq!(cost.reduced_generic(2), ManaCost::parse("{1}{R}").unwrap());
+    assert_eq!(cost.reduced_generic(99), ManaCost::parse("{R}").unwrap());
+    assert!(
+        cost.reduced_generic(99)
+            .payment(&[source(&[Color::White])])
+            .is_none()
+    );
+}

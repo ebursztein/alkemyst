@@ -7,3 +7,7 @@ pub const INITIAL: &str = include_str!("../../migrations/001_initial.sql");
 pub const REVISIONS: &str = "SELECT table_name, revision FROM table_revisions";
 pub const BUMP_REVISION: &str = "INSERT INTO table_revisions(table_name, revision) VALUES (?1, 1)
     ON CONFLICT(table_name) DO UPDATE SET revision = revision + 1";
+
+pub const CATALOG: &str = include_str!("../../migrations/002_catalog.sql");
+
+pub const ARENA_ALIASES: &str = include_str!("../../migrations/003_arena_aliases.sql");

@@ -8,6 +8,7 @@ type Reply<T> = oneshot::Sender<Result<T>>;
 pub(super) enum Command {
     Read(Statement, Vec<Value>, Reply<Vec<Value>>),
     Write(Vec<Write>, Reply<()>),
+    Source(PathBuf, Statement, Reply<Vec<Value>>),
     Explain(Statement, Vec<Value>, Reply<Vec<String>>),
     Metrics(Reply<Metrics>),
     Close(Reply<()>),
@@ -47,6 +48,9 @@ impl Engine {
                 };
                 while let Some(command) = receiver.blocking_recv() {
                     match command {
+                        Command::Source(path, query, reply) => {
+                            let _ = reply.send(worker.read_source(&path, query));
+                        }
                         Command::Read(query, params, reply) => {
                             let _ = reply.send(worker.read(query, params));
                         }
@@ -81,6 +85,12 @@ impl Engine {
 
     pub async fn read(&self, statement: Statement, params: Vec<Value>) -> Result<Vec<Value>> {
         self.request(|reply| Command::Read(statement, params, reply))
+            .await
+    }
+
+    /// Read a native data source using a trusted statement. Never exposed as an API/MCP operation.
+    pub async fn read_source(&self, path: &Path, statement: Statement) -> Result<Vec<Value>> {
+        self.request(|reply| Command::Source(path.to_path_buf(), statement, reply))
             .await
     }
 

@@ -54,6 +54,25 @@ async fn existing_receipts_migrate_without_losing_retry_identity() {
             params: vec![], expected_rows: None,
         },
     ]).await.unwrap();
+    // Reconstruct the actual pre-capture schema, rather than only changing its version number.
+    db.write(
+        [
+            "DROP TABLE capture_events",
+            "DROP TABLE games",
+            "DROP TABLE matches",
+            "DROP TABLE arena_decks",
+            "DROP TABLE capture_sources",
+        ]
+        .into_iter()
+        .map(|sql| Write {
+            statement: Mutation { sql, writes: &[] },
+            params: vec![],
+            expected_rows: None,
+        })
+        .collect(),
+    )
+    .await
+    .unwrap();
     db.close().await.unwrap();
     let reopened = Engine::open(&path, 4096).unwrap();
     let retry = Decks::new(reopened.clone())

@@ -25,6 +25,7 @@ rmcp = { version = "=3.5.1", default-features = false, features = ["server", "tr
 tokio-util = "=0.7.19"
 jsonschema = { version = "=0.59.0", default-features = false }
 
+same-file = "=1.0.6"
+manasight-parser = { version = "=0.7.3", default-features = false, features = ["brace_depth_flush", "tailer"] }
 [dev-dependencies]
-manasight-parser = { version = "=0.7.3", default-features = false, features = ["brace_depth_flush"] }
 tower = { version = "=0.5.3", features = ["util"] }

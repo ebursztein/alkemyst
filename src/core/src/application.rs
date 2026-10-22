@@ -10,6 +10,7 @@ use crate::{
 pub struct Application {
     pub catalog: Catalog,
     pub decks: Decks,
+    pub ingest: crate::ingest::Ingestor,
     provider: std::sync::Arc<dyn BulkProvider>,
 }
 
@@ -21,6 +22,7 @@ impl Application {
     pub fn with_bulk_provider(db: Engine, provider: std::sync::Arc<dyn BulkProvider>) -> Self {
         Self {
             catalog: Catalog::new(db.clone()),
+            ingest: crate::ingest::Ingestor::new(db.clone()),
             decks: Decks::new(db),
             provider,
         }

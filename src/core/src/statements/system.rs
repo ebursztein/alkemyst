@@ -15,3 +15,5 @@ pub const ARENA_ALIASES: &str = include_str!("../../migrations/003_arena_aliases
 pub const DECKS: &str = include_str!("../../migrations/004_decks.sql");
 
 pub const RECEIPT_ORIGINS: &str = include_str!("../../migrations/005_receipt_origins.sql");
+
+pub const CAPTURE: &str = include_str!("../../migrations/006_capture.sql");

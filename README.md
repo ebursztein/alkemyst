@@ -107,3 +107,42 @@ return `isError` with the same typed problem as REST. MCP mutations record agent
 provenance. SQLite, prepared statements, the bounded result cache, and refresh
 coordination are shared with REST. Sessions contain no separate domain storage.
 Validation uses local JSON schemas with HTTP and file retrieval disabled.
+
+## Local Arena capture development
+
+The pinned native parser now feeds a durable ingestion adapter. It discovers the
+normal Arena log pair, imports retained `Player-prev.log` history and follows
+`Player.log`. Missing files are normal while Arena is closed. Tracking health
+reports waiting, tracking, degraded or stopped; temporary errors can recover.
+Native desktop lifecycle and timeline screens are still being built.
+
+```sh
+cargo run -p alkemyst-core --example capture -- import work/plays.sqlite3 /path/to/Player-prev.log
+cargo run -p alkemyst-core --example capture -- status work/plays.sqlite3
+cargo run -p alkemyst-core --example capture -- watch work/plays.sqlite3
+```
+
+`watch` uses native discovery by default. To select files explicitly, pass the
+previous log and current log after the database path. Ctrl-C stops tracking and
+prints final counts. The utility emits only counts and health, never raw events,
+player identities or credentials. The original Arena files open read-only.
+
+Checkpoint updates commit in the same transaction as normalized events and game
+records. A partial line or entry is reread after restart. File identity and content
+anchors detect replacement and truncation. Large files stream in bounded batches;
+a single entry over 8 MiB reports a capture error and preserves the checkpoint.
+Reimporting a log or its retained copy never creates duplicate games. Captured
+facts and game attribution are protected by SQLite immutability triggers.
+
+Deck submissions and sideboard responses create immutable versions; explicit
+reconnect lists can recover missing deck submissions. A fresh match cannot inherit
+an old submission without new evidence. Match and game identities remain separate,
+including Bo3. Missing seats, teams, results and winners remain unknown. The
+`unknown_results` count includes unfinished games and conflicting outcomes. It is
+never interpreted as a loss. Sparse captures retain their gaps for timeline and
+statistics queries to expose.
+
+Only normalized gameplay data is stored: account/session records, player names,
+chat, opaque raw envelopes and credentials are excluded. Source identifiers and
+external match/deck identifiers are hashed. Saved deck names remain local user
+data. Personal databases and raw logs must stay outside Git.

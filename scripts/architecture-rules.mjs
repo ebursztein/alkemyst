@@ -11,6 +11,7 @@ const ignored = new Set([
   ".git",
   ".sprinty",
   ".astro",
+  ".wrangler",
 ]);
 const extensions = new Set([".rs", ".ts", ".tsx", ".js", ".mjs", ".astro", ".sql", ".css"]);
 const normalized = (path) => path.split(sep).join("/");

@@ -4,3 +4,4 @@ packages:
   - "src/site"
 onlyBuiltDependencies:
   - esbuild
+  - workerd

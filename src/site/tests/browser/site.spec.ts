@@ -59,12 +59,13 @@ test("every published page and its local link destinations resolve", async ({ pa
   for (const path of pages) {
     const response = await page.goto(path);
     expect(response?.status(), path).toBe(200);
+    const origin = new URL(page.url()).origin;
     const links = await page
       .locator("a[href]")
       .evaluateAll((anchors) => anchors.map((anchor) => (anchor as HTMLAnchorElement).href));
     for (const href of links) {
       const url = new URL(href);
-      if (url.origin !== "http://127.0.0.1:4321" || checked.has(url.pathname)) continue;
+      if (url.origin !== origin || checked.has(url.pathname)) continue;
       checked.add(url.pathname);
       expect((await page.request.get(url.pathname)).status(), url.pathname).toBe(200);
     }

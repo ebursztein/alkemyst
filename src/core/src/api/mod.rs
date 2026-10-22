@@ -1,3 +1,4 @@
+mod analysis;
 mod auth;
 mod cards;
 mod decks;
@@ -56,6 +57,7 @@ pub(super) fn router_with_mcp(
         .route("/v1/decks", get(decks::list).post(decks::create))
         .route("/v1/deck-versions", post(decks::create_version))
         .route("/v1/deck-versions/{id}", get(decks::version))
+        .route("/v1/deck-versions/{id}/analysis", get(analysis::profile))
         .route("/v1/deck-versions/{id}/arena", get(decks::export))
         .route("/v1/decks/import-arena", post(decks::import))
         .route("/v1/notes", get(notes::list).post(notes::create))

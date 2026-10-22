@@ -458,6 +458,57 @@
         }
       }
     },
+    "/v1/deck-versions/{id}/analysis": {
+      "get": {
+        "tags": [
+          "analysis"
+        ],
+        "summary": "Analyze an immutable deck version using the current local catalog. Printed\ncurves remain available when missing or unsupported rules block simulation.",
+        "operationId": "analysisProfileGet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/deck-versions/{id}/arena": {
       "get": {
         "tags": [
@@ -1502,6 +1553,64 @@
           }
         }
       },
+      "CardProfile": {
+        "type": "object",
+        "required": [
+          "reference",
+          "quantity",
+          "zone",
+          "issues"
+        ],
+        "properties": {
+          "adventure_cost": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cast_cost": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "equip_cost": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Issue"
+            }
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "oracle_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "reference": {
+            "type": "string"
+          },
+          "zone": {
+            "$ref": "#/components/schemas/Zone"
+          }
+        }
+      },
       "CardSummary": {
         "type": "object",
         "required": [
@@ -1615,6 +1724,55 @@
           }
         }
       },
+      "Counts": {
+        "type": "object",
+        "required": [
+          "main",
+          "sideboard",
+          "lands",
+          "equipment",
+          "creatures",
+          "legendary",
+          "unresolved_main"
+        ],
+        "properties": {
+          "creatures": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "equipment": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "lands": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "legendary": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "main": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "sideboard": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "unresolved_main": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
       "CreateDeck": {
         "type": "object",
         "required": [
@@ -1684,6 +1842,26 @@
           }
         },
         "additionalProperties": false
+      },
+      "CurveBin": {
+        "type": "object",
+        "required": [
+          "quantity"
+        ],
+        "properties": {
+          "mana_value": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
       },
       "DeckCard": {
         "type": "object",
@@ -2065,6 +2243,40 @@
         },
         "additionalProperties": false
       },
+      "Issue": {
+        "type": "object",
+        "required": [
+          "code",
+          "blocking",
+          "detail"
+        ],
+        "properties": {
+          "blocking": {
+            "type": "boolean"
+          },
+          "code": {
+            "$ref": "#/components/schemas/IssueCode"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "IssueCode": {
+        "type": "string",
+        "enum": [
+          "missing_card",
+          "invalid_metadata",
+          "unsupported_cost",
+          "unknown_rules",
+          "rules_changed",
+          "unsupported_layout",
+          "combat_excluded",
+          "recursion_excluded",
+          "activated_ability_excluded",
+          "ignored_card"
+        ]
+      },
       "MatchMode": {
         "type": "string",
         "enum": [
@@ -2303,6 +2515,89 @@
           }
         }
       },
+      "Profile": {
+        "type": "object",
+        "required": [
+          "version_id",
+          "deck_id",
+          "name",
+          "format",
+          "compiler_version",
+          "model_version",
+          "policy_version",
+          "sources",
+          "counts",
+          "curve",
+          "cards",
+          "can_simulate",
+          "assumptions"
+        ],
+        "properties": {
+          "assumptions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "can_simulate": {
+            "type": "boolean"
+          },
+          "cards": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CardProfile"
+            }
+          },
+          "catalog_snapshot": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "catalog_updated_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "compiler_version": {
+            "type": "string"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/Counts"
+          },
+          "curve": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CurveBin"
+            }
+          },
+          "deck_id": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "model_version": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "policy_version": {
+            "type": "string"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SourceCount"
+            }
+          },
+          "version_id": {
+            "type": "string"
+          }
+        }
+      },
       "ReferenceResolution": {
         "type": "object",
         "required": [
@@ -2428,6 +2723,38 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "SourceCount": {
+        "type": "object",
+        "required": [
+          "color",
+          "unrestricted_lands",
+          "conditional_lands",
+          "nonland_sources"
+        ],
+        "properties": {
+          "color": {
+            "type": "string"
+          },
+          "conditional_lands": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Potential land color depends on board state or spending restriction.",
+            "minimum": 0
+          },
+          "nonland_sources": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Includes summoning-sick or restricted creature/artifact mana abilities.",
+            "minimum": 0
+          },
+          "unrestricted_lands": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Color always available once untapped, with no spending restriction.",
+            "minimum": 0
           }
         }
       },

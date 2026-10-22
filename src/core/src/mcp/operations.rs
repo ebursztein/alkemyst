@@ -11,6 +11,12 @@ use serde_json::{Value, json};
 
 pub async fn invoke(app: &Application, name: &str, args: Value) -> Result<Value, ApiError> {
     match name {
+        "analysisProfileGet" => encode(
+            app.analysis
+                .profile(&string(&args, "id")?)
+                .await?
+                .ok_or_else(ApiError::missing)?,
+        ),
         "gamesList" => encode(app.history.games(decode(args)?).await?),
         "gameGet" => encode(
             app.history

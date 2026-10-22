@@ -3,3 +3,6 @@ mod estimates;
 pub mod simulation;
 pub mod turns;
 pub use estimates::Estimate;
+mod snapshot;
+pub use snapshot::{Analysis, Counts, CurveBin, DeckSnapshot, Error, ResolvedCard};
+pub mod compiler;

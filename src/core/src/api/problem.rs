@@ -150,3 +150,17 @@ impl From<crate::ingest::Error> for ApiError {
         }
     }
 }
+
+impl From<crate::analysis::Error> for ApiError {
+    fn from(error: crate::analysis::Error) -> Self {
+        match error {
+            crate::analysis::Error::Database(error) => error.into(),
+            crate::analysis::Error::Invalid(message) => Self::invalid(message),
+            crate::analysis::Error::Json(_) => Self::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ErrorCode::Internal,
+                "Invalid stored analysis input",
+            ),
+        }
+    }
+}

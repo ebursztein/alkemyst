@@ -1,0 +1,146 @@
+[
+  {
+    "oracle_id": "f5f4dd28-f4ae-4d39-b9b8-6ebfd63c93fe",
+    "name": "Basilisk Collar",
+    "fingerprint": "4ce529e6f24f7d903eb2433b56f8e1dc7e0800d9185a8b3abc3faef422d9f006",
+    "rule": "basilisk"
+  },
+  {
+    "oracle_id": "5e060d58-4d6e-425c-b7d4-727669fcce5b",
+    "name": "Buster Sword",
+    "fingerprint": "7f5549a5a438b2759e1c030990cb7a46df3351b2d20ab9ba236bb7dfc9a4f3d3",
+    "rule": "buster_sword"
+  },
+  {
+    "oracle_id": "3db40361-5f55-417e-a7cd-7e360cc91b4d",
+    "name": "Chainsaw",
+    "fingerprint": "a9d5dde13c692e9707ff13352d34c085ef8964df7154b29717a133ca347b79b2",
+    "rule": "chainsaw"
+  },
+  {
+    "oracle_id": "33d2584b-bf29-4c22-bd45-14ba2fb98c0e",
+    "name": "Cloud, Midgar Mercenary",
+    "fingerprint": "0630f772c12ff20cb5f8ead0af016d00882de16fd48f0fa2da56324ed6060c20",
+    "rule": "cloud"
+  },
+  {
+    "oracle_id": "a5a18764-eb29-4bd8-a2e9-0ce55f4f6c88",
+    "name": "Doc Ock's Tentacles",
+    "fingerprint": "a199e596020d82104c419d8998fd6a0107b2c810377d3a270c79a0b193c74041",
+    "rule": "tentacles"
+  },
+  {
+    "oracle_id": "e809b847-b712-4558-95ea-9bb7356cde91",
+    "name": "Dragonfire Blade",
+    "fingerprint": "205580a16f233f364eb3df61d49fa7a6c60bda11512a8f837eed67dc5cb2064a",
+    "rule": "dragonfire"
+  },
+  {
+    "oracle_id": "70538676-2ffb-4cad-827e-b55e81088678",
+    "name": "Dwarven Mauler",
+    "fingerprint": "55ce787465583218fded75766f375e31ab060c565ba729dca02f93cbea73f853",
+    "rule": "mauler"
+  },
+  {
+    "oracle_id": "ae03782f-8f05-4ce2-a049-005b1b688faf",
+    "name": "Dáin's Company",
+    "fingerprint": "e1ff47c2f7c603499dde8b77a7d41f3987bf8744a0542ad061fa081aefbd12b4",
+    "rule": "dain"
+  },
+  {
+    "oracle_id": "7e3085d8-9d46-41e0-ad9d-54c44d9ef267",
+    "name": "Freya Crescent",
+    "fingerprint": "2b4bc2e5fe82ac184cd243d86375f6026883f8682890c1a7485b3c64bf641015",
+    "rule": "freya"
+  },
+  {
+    "oracle_id": "c629fa91-e13c-494b-a95f-a91b7c52035a",
+    "name": "Giott, King of the Dwarves",
+    "fingerprint": "02beb6428c64d56935ad11499d30244a122c94c2c01e599b61fc12ff0ac7a2c3",
+    "rule": "giott"
+  },
+  {
+    "oracle_id": "3f17c60e-923a-4392-9da8-87d9ded009b7",
+    "name": "Inspiring Vantage",
+    "fingerprint": "c9f6c050eac5746868e410120ea0447dc3bfe83c1bb80b49653c5c12f55bae3e",
+    "rule": "vantage"
+  },
+  {
+    "oracle_id": "10c48d19-d91f-4674-b186-477acaf08e5a",
+    "name": "Kellan, the Fae-Blooded // Birthright Boon",
+    "fingerprint": "6c2bee894498ce30fdb6eca6524dae59af1f1d5534172e6b974976ea5bb70018",
+    "rule": "kellan"
+  },
+  {
+    "oracle_id": "840de40b-590e-4bf0-8d16-22b0eff61202",
+    "name": "Kíli the Resourceful",
+    "fingerprint": "c2c90cae42501be006d9d6f42db12494029a21b6437e33e34628c250bc5bbbaf",
+    "rule": "kili"
+  },
+  {
+    "oracle_id": "7f9a8845-d760-44a7-a4c9-8a20dba4e14a",
+    "name": "Mjölnir, Hammer of Thor",
+    "fingerprint": "5baeadf4b15deb3a1a35dd63e725067c849175480465e74a415cd86cbd5ec2fc",
+    "rule": "mjolnir"
+  },
+  {
+    "oracle_id": "a3fb7228-e76b-4e96-a40e-20b5fed75685",
+    "name": "Mountain",
+    "fingerprint": "d71e708b2b88922c9186390b31846bf1e496b34cd537a5dce375bf6af6422a5c",
+    "rule": "mountain"
+  },
+  {
+    "oracle_id": "bc71ebf6-2056-41f7-be35-b2e5c34afa99",
+    "name": "Plains",
+    "fingerprint": "fe3df1037dcee0f1be882e52a2b7d6ba24ab4968b5e714dae81961addab9604a",
+    "rule": "plains"
+  },
+  {
+    "oracle_id": "d81d5749-ab4d-42c5-8903-0b400f10fe33",
+    "name": "Raubahn, Bull of Ala Mhigo",
+    "fingerprint": "4d53d4b73af0cb6682450da271acf943903c05c424980418b86741ff2c696653",
+    "rule": "raubahn"
+  },
+  {
+    "oracle_id": "45181cb8-2090-4471-ba90-e5a8f04d525f",
+    "name": "Sacred Foundry",
+    "fingerprint": "4b29d49bc4615db8eb95f0966d1cca4a83821887c0e0b6e5636641f8b5a4084a",
+    "rule": "foundry"
+  },
+  {
+    "oracle_id": "d13fc657-c6fc-4394-bc70-691050550226",
+    "name": "Sheltered by Ghosts",
+    "fingerprint": "65fb805cedc54c1f6266550c0df6c39366b5ebd46855699af33e17734c9e1906",
+    "rule": "sheltered"
+  },
+  {
+    "oracle_id": "a202276b-1f1b-4277-95ee-26877a204f5e",
+    "name": "Sunbillow Verge",
+    "fingerprint": "8f654bce0eaace942b17ffb164128415311e2a4ec7efbd50a65c3ad73d85c32e",
+    "rule": "verge"
+  },
+  {
+    "oracle_id": "5ad0b405-cca4-475e-985c-4d7e3599d87e",
+    "name": "Sundown Pass",
+    "fingerprint": "193838a4adf3bde643c69f108f72762ebc405981ecbe0ddd706d694dcb709af7",
+    "rule": "sundown"
+  },
+  {
+    "oracle_id": "3678c06f-8a33-4a6d-bf20-5b92d5c05a95",
+    "name": "The Lonely Mountain",
+    "fingerprint": "a48b19fd94d6050a2bf61628a2db1a4529e548272d092514817ba5c74266db82",
+    "rule": "lonely"
+  },
+  {
+    "oracle_id": "2842217a-173e-4879-8b25-fefe2fc1123f",
+    "name": "Thor, God of Thunder",
+    "fingerprint": "0d8037eee05529c0231ea127a87a8ffbb349d345b3833f5295b24ddd2f92f9ec",
+    "rule": "thor"
+  },
+  {
+    "oracle_id": "94917b80-ac32-45ab-b4ee-157ade024bcd",
+    "name": "Thorin, Mountain-king",
+    "fingerprint": "03e94fbcf398c0889ed3e8459f15d655e25e259eb4764e6ca84fa9f86957819a",
+    "rule": "thorin"
+  }
+]

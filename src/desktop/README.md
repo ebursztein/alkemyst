@@ -56,6 +56,7 @@ confirmation and a safety backup of the previous library.
 
 Coverage includes the native build script and real-window smoke test. Native
 window/tray checks run on macOS and Windows CI; packaging and installer verification
-remain in progress. Linux-only Tauri transitives have exact, expiring OSV exceptions with automated
+have a [dedicated workflow](INSTALLERS.md) and remain a release gate until both
+platform checks pass. Linux-only Tauri transitives have exact, expiring OSV exceptions with automated
 target-exclusion checks; see the root SECURITY.md and Sprinty S05-008. No preview installer is
 published, and stable signing/notarization remains a release prerequisite.

@@ -27,7 +27,12 @@ it("requires explicit opt-in to launch at login and can pause tracking separatel
   let startup = false;
   let paused = false;
   call.mockImplementation(async (command, args) => {
-    if (command === "native_settings") return { launch_at_login: startup, tracking_paused: paused };
+    if (command === "native_settings")
+      return {
+        launch_at_login: startup,
+        tracking_paused: paused,
+        tracking: { state: "tracking", last_error: null },
+      };
     if (command === "set_launch_at_login") startup = (args as { enabled: boolean }).enabled;
     else if (command === "set_tracking_paused") paused = (args as { paused: boolean }).paused;
     else throw new Error("Unexpected native command");
@@ -37,6 +42,7 @@ it("requires explicit opt-in to launch at login and can pause tracking separatel
   const login = await screen.findByRole("checkbox", { name: "Launch Alkemyst at login" });
   expect((login as HTMLInputElement).checked).toBe(false);
   expect(call).toHaveBeenCalledTimes(1);
+  await screen.findByText("Following Arena logs");
   fireEvent.click(login);
   await waitFor(() => expect((login as HTMLInputElement).checked).toBe(true));
   expect(call).toHaveBeenCalledWith("set_launch_at_login", { enabled: true });
@@ -54,7 +60,11 @@ it("requires explicit opt-in to launch at login and can pause tracking separatel
 it("shows read failures with retry and rejects invalid native settings", async () => {
   call
     .mockResolvedValueOnce({ launch_at_login: "yes", tracking_paused: false })
-    .mockResolvedValue({ launch_at_login: false, tracking_paused: false });
+    .mockResolvedValue({
+      launch_at_login: false,
+      tracking_paused: false,
+      tracking: { state: "waiting", last_error: null },
+    });
   const client = await mount();
   await screen.findByRole("alert");
   expect(screen.queryByRole("checkbox")).toBeNull();

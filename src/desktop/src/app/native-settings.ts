@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 export interface NativeSettings {
   launch_at_login: boolean;
   tracking_paused: boolean;
+  tracking: { state: "waiting" | "tracking" | "degraded" | "stopped"; last_error: string | null };
 }
 export async function readNativeSettings(): Promise<NativeSettings> {
   try {
@@ -16,7 +17,25 @@ export async function readNativeSettings(): Promise<NativeSettings> {
     ) {
       throw new Error("Invalid native settings");
     }
-    return { launch_at_login: value.launch_at_login, tracking_paused: value.tracking_paused };
+    if (
+      !("tracking" in value) ||
+      !value.tracking ||
+      typeof value.tracking !== "object" ||
+      !("state" in value.tracking) ||
+      !["waiting", "tracking", "degraded", "stopped"].includes(String(value.tracking.state)) ||
+      !("last_error" in value.tracking) ||
+      !(value.tracking.last_error === null || typeof value.tracking.last_error === "string")
+    ) {
+      throw new Error("Invalid tracking health");
+    }
+    return {
+      launch_at_login: value.launch_at_login,
+      tracking_paused: value.tracking_paused,
+      tracking: {
+        state: value.tracking.state as NativeSettings["tracking"]["state"],
+        last_error: value.tracking.last_error,
+      },
+    };
   } catch {
     throw new Error(
       "Could not read desktop settings. Open the Alkemyst desktop app and try again.",

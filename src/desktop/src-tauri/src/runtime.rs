@@ -2,7 +2,7 @@ use alkemyst_core::{
     Application,
     api::{AuthConfig, RunningServer},
     db::Engine,
-    ingest::TrackingTask,
+    ingest::{TrackingHealth, TrackingState, TrackingTask},
 };
 use serde::Serialize;
 use std::{
@@ -37,6 +37,10 @@ pub enum Error {
     Tracking(#[from] alkemyst_core::ingest::Error),
     #[error("local services are stopping")]
     Stopped,
+}
+pub struct NativeTrackingStatus {
+    pub paused: bool,
+    pub health: TrackingHealth,
 }
 struct Services {
     server: Option<RunningServer>,
@@ -114,6 +118,33 @@ impl NativeRuntime {
     }
     pub async fn tracking_paused(&self) -> bool {
         self.services.lock().await.paused
+    }
+    pub async fn tracking_status(&self) -> NativeTrackingStatus {
+        let services = self.services.lock().await;
+        let health = if let Some(task) = &services.tracking {
+            if task.is_finished() {
+                TrackingHealth {
+                    state: TrackingState::Degraded,
+                    last_error: Some("worker_stopped".into()),
+                }
+            } else {
+                task.subscribe().borrow().clone()
+            }
+        } else if services.paused || services.stopped || matches!(self.source, Tracking::Disabled) {
+            TrackingHealth {
+                state: TrackingState::Stopped,
+                last_error: None,
+            }
+        } else {
+            TrackingHealth {
+                state: TrackingState::Degraded,
+                last_error: Some("discovery_unavailable".into()),
+            }
+        };
+        NativeTrackingStatus {
+            paused: services.paused,
+            health,
+        }
     }
     pub async fn set_tracking_paused(&self, paused: bool) -> Result<(), Error> {
         let mut services = self.services.lock().await;

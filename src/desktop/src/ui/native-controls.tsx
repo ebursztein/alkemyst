@@ -4,7 +4,12 @@ import { Failure, Loading } from "./states.js";
 const key = ["native-settings"] as const;
 export function NativeControls() {
   const client = useQueryClient();
-  const settings = useQuery({ queryKey: key, queryFn: readNativeSettings, staleTime: 0 });
+  const settings = useQuery({
+    queryKey: key,
+    queryFn: readNativeSettings,
+    staleTime: 0,
+    refetchInterval: 2000,
+  });
   const update = useMutation({
     mutationFn: updateNativeSetting,
     onSuccess: async () => {
@@ -26,6 +31,24 @@ export function NativeControls() {
             void settings.refetch();
           }}
         />
+      )}
+      {settings.data && (
+        <p role="status">
+          {settings.data.tracking_paused
+            ? "Arena tracking paused"
+            : {
+                waiting: "Waiting for Arena logs",
+                tracking: "Following Arena logs",
+                degraded: "Arena tracking needs attention",
+                stopped: "Arena tracking stopped",
+              }[settings.data.tracking.state]}
+        </p>
+      )}
+      {settings.data?.tracking.state === "degraded" && (
+        <p className="muted">
+          Capture is unavailable. Check that Arena is installed and its logs and local data are
+          accessible, then pause and resume tracking to retry.
+        </p>
       )}
       {settings.data && (
         <fieldset disabled={update.isPending} className="form-section">

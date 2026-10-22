@@ -27,6 +27,7 @@ fn connection_bootstrap<R: Runtime>(
 struct NativeSettings {
     launch_at_login: bool,
     tracking_paused: bool,
+    tracking: alkemyst_core::ingest::TrackingHealth,
 }
 
 #[tauri::command]
@@ -40,9 +41,11 @@ async fn native_settings<R: Runtime>(
         .autolaunch()
         .is_enabled()
         .map_err(|_| "Could not read launch-at-login settings.")?;
+    let tracking = runtime.tracking_status().await;
     Ok(NativeSettings {
         launch_at_login,
-        tracking_paused: runtime.tracking_paused().await,
+        tracking_paused: tracking.paused,
+        tracking: tracking.health,
     })
 }
 

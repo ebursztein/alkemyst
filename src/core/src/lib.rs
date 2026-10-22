@@ -15,3 +15,5 @@ pub mod mcp;
 pub mod ingest;
 
 pub mod history;
+
+pub mod analysis;

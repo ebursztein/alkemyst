@@ -15,6 +15,9 @@ test("a cold library retries metadata acquisition and unlocks resolved deck anal
   await page.getByRole("button", { name: "Download card metadata" }).click();
   await expect(page.getByRole("alert")).toContainText("Card refresh failed");
   expect((await client.GET("/v1/catalog")).data?.cards).toBe(0);
+  // Keep intermediate color states observable across the refresh response.
+  // Contrast must hold during a variant change, not only after animations end.
+  await page.addStyleTag({ content: ".button { transition-duration: 10s !important; }" });
   await page.getByRole("button", { name: "Download card metadata" }).click();
   await expect(page.getByRole("button", { name: "Update card metadata" })).toBeVisible();
   expect((await client.GET("/v1/catalog")).data?.cards).toBeGreaterThan(20);

@@ -10,9 +10,8 @@
   font-weight: 650;
   line-height: 1.35;
   box-shadow: var(--shadow);
-  transition:
-    background 0.12s,
-    box-shadow 0.12s;
+  /* Keep text/background changes atomic when the semantic variant changes. */
+  transition: box-shadow 0.12s;
   cursor: pointer;
 }
 .button:hover {

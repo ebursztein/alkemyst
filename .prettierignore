@@ -11,3 +11,6 @@ coverage
 node_modules
 playwright-report
 test-results
+
+# Tauri-generated capability schemas (not maintained sources).
+src/desktop/src-tauri/gen/

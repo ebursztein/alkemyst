@@ -6,7 +6,9 @@
   "license": "Apache-2.0",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "tauri": "tauri",
+    "native:smoke": "cargo test --manifest-path src-tauri/Cargo.toml --locked --features custom-protocol,native-smoke --test native_smoke"
   },
   "dependencies": {
     "@alkemyst/sdk": "workspace:*",
@@ -18,6 +20,7 @@
     "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "2.12.4",
     "@vitejs/plugin-react": "6.1.2",
     "vite": "8.3.4"
   }

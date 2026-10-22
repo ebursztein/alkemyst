@@ -145,6 +145,15 @@ pub async fn invoke(app: &Application, name: &str, args: Value) -> Result<Value,
         }
         "catalogStatusGet" => encode(app.catalog.status().await?),
         "catalogRefresh" => encode(app.refresh_catalog().await?),
+        "deckVersionsList" => {
+            let page: PageQuery = decode(args.clone())?;
+            encode(
+                app.decks
+                    .versions(&string(&args, "id")?, page.limit, page.cursor)
+                    .await?
+                    .ok_or_else(ApiError::missing)?,
+            )
+        }
         "decksList" => {
             let page: PageQuery = decode(args)?;
             encode(app.decks.list(page.limit, page.cursor).await?)

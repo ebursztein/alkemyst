@@ -245,6 +245,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/decks/{id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List sealed immutable versions in descending creation order. Metadata and
+         *     card counts are aggregated by SQL; cursors remain opaque to callers.
+         */
+        get: operations["deckVersionsList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/discovery": {
         parameters: {
             query?: never;
@@ -1429,6 +1449,26 @@ export interface components {
             /** Format: int64 */
             states: number;
         };
+        VersionPage: {
+            items: components["schemas"]["VersionSummary"][];
+            next_cursor?: string | null;
+        };
+        VersionSummary: {
+            /** Format: int64 */
+            created_at: number;
+            deck_id: string;
+            format: string;
+            id: string;
+            /** Format: int32 */
+            main_count: number;
+            name: string;
+            /** Format: int32 */
+            ordinal: number;
+            origin: components["schemas"]["Origin"];
+            parent_version?: string | null;
+            /** Format: int32 */
+            sideboard_count: number;
+        };
         /** @enum {string} */
         Zone: "main" | "sideboard" | "command" | "companion";
     };
@@ -1985,6 +2025,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeckVersion"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deckVersionsList: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionPage"];
                 };
             };
             "4XX": {

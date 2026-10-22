@@ -225,3 +225,7 @@ draws, basic turns and visible-card controls through REST, the generated SDK and
 MCP. Sessions freeze their deck metadata and seed; immutable steps use revision
 checks and idempotency keys. Practice is a manual sandbox, with mana payments,
 card abilities and combat left to the player. See [practice semantics](src/core/src/practice/README.md).
+
+`GET /v1/decks/{id}/versions` (`deckVersionsList` in MCP) provides paged immutable
+version summaries with SQL-computed main/sideboard counts. The generated SDK
+exposes the same opaque-cursor operation for version browsing and comparison.

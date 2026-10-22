@@ -93,3 +93,23 @@ pub(super) async fn export(
         text: state.app.decks.export_arena(&id).await?,
     }))
 }
+
+/// List sealed immutable versions in descending creation order. Metadata and
+/// card counts are aggregated by SQL; cursors remain opaque to callers.
+#[utoipa::path(get,path="/v1/decks/{id}/versions",operation_id="deckVersionsList",
+    params(("id"=String,Path),PageQuery),
+    responses((status=200,body=crate::domain::VersionPage),(status="4XX",body=Problem),(status="5XX",body=Problem)))]
+pub(super) async fn versions(
+    State(state): State<AppState>,
+    ApiPath(id): ApiPath<String>,
+    ApiQuery(page): ApiQuery<PageQuery>,
+) -> Result<Json<crate::domain::VersionPage>, ApiError> {
+    Ok(Json(
+        state
+            .app
+            .decks
+            .versions(&id, page.limit, page.cursor)
+            .await?
+            .ok_or_else(ApiError::missing)?,
+    ))
+}

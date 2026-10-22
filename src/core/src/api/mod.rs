@@ -73,6 +73,7 @@ pub(super) fn router_with_mcp(
         .route("/v1/capture", get(history::capture))
         .route("/v1/discovery", get(discovery::get))
         .route("/v1/decks", get(decks::list).post(decks::create))
+        .route("/v1/decks/{id}/versions", get(decks::versions))
         .route("/v1/deck-versions", post(decks::create_version))
         .route("/v1/deck-versions/{id}", get(decks::version))
         .route("/v1/deck-versions/{id}/analysis", get(analysis::profile))

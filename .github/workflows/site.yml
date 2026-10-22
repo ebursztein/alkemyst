@@ -1,0 +1,101 @@
+name: Site delivery
+on:
+  pull_request:
+    paths:
+      - "src/site/**"
+      - "src/desktop/src/styles/palette.css"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".node-version"
+      - "playwright.site*.ts"
+      - "scripts/site-build.mjs"
+      - "scripts/tests/site-build.test.mjs"
+      - ".github/workflows/site.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/site/**"
+      - "src/desktop/src/styles/palette.css"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".node-version"
+      - "playwright.site*.ts"
+      - "scripts/site-build.mjs"
+      - ".github/workflows/site.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: site-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  SITE_URL: https://alkemyst.3713.workers.dev
+  WRANGLER_SEND_METRICS: "false"
+  CI: "true"
+jobs:
+  validate:
+    name: Site build and Worker checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - run: npm install --global pnpm@10.33.2
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:tooling
+      - run: pnpm typecheck
+      - run: pnpm site:build
+      - run: pnpm exec wrangler deploy --config src/site/wrangler.jsonc --dry-run --outdir '${{ runner.temp }}/site-dry-run'
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:site:worker
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: site-static-${{ github.sha }}
+          path: src/site/dist/
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: site-browser-report
+          path: playwright-report/site/
+          retention-days: 14
+  deploy:
+    name: Deploy verified static site
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: site-production
+      url: https://alkemyst.3713.workers.dev
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      SITE_TEST_URL: https://alkemyst.3713.workers.dev
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - run: npm install --global pnpm@10.33.2
+      - run: pnpm install --frozen-lockfile
+      - name: Require scoped deployment credentials
+        run: node -e 'if (!process.env.CLOUDFLARE_ACCOUNT_ID || !process.env.CLOUDFLARE_API_TOKEN) throw new Error("Set the CLOUDFLARE_ACCOUNT_ID repository variable and CLOUDFLARE_API_TOKEN deployment secret")'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: site-static-${{ github.sha }}
+          path: src/site/dist/
+      - run: pnpm exec wrangler deploy --config src/site/wrangler.jsonc
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:site
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: deployed-site-browser-report
+          path: playwright-report/site/
+          retention-days: 14

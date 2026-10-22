@@ -169,11 +169,7 @@ async fn concurrent_actions_use_revisions_and_retries_return_the_original_step()
         .await
         .is_err()
     );
-    assert!(
-        p.create("race-a", input.clone(), Origin::User)
-            .await
-            .is_err()
-    );
+    assert!(p.create(key, input.clone(), Origin::User).await.is_err());
     for i in 0..4 {
         p.create(&format!("page-{i}"), input.clone(), Origin::User)
             .await
@@ -199,4 +195,7 @@ async fn concurrent_actions_use_revisions_and_retries_return_the_original_step()
         }
     }
     assert_eq!(ids.len(), 5);
+    // The losing transaction rolls back its receipt, leaving that key reusable.
+    let losing_key = if key == "race-a" { "race-b" } else { "race-a" };
+    p.create(losing_key, input, Origin::User).await.unwrap();
 }

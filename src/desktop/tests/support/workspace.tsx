@@ -1,0 +1,29 @@
+import { cleanup, render } from "@testing-library/react";
+import { createMemoryHistory } from "@tanstack/react-router";
+import { afterEach, beforeAll, vi } from "vitest";
+import { DesktopApp } from "../../src/app/desktop-app.js";
+import { createServices, type Services } from "../../src/app/services.js";
+import type { LocalService } from "../../../../scripts/local-service.mjs";
+let clients: Services[] = [];
+beforeAll(() => {
+  vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+});
+afterEach(() => {
+  cleanup();
+  for (const client of clients) client.queryClient.clear();
+  clients = [];
+});
+export function renderWorkspace(
+  service: LocalService,
+  path: string,
+  fetcher: typeof fetch = fetch,
+) {
+  const services = createServices({ base_url: service.baseUrl, token: service.token }, fetcher);
+  clients.push(services);
+  return {
+    ...render(
+      <DesktopApp services={services} history={createMemoryHistory({ initialEntries: [path] })} />,
+    ),
+    services,
+  };
+}

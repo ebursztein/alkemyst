@@ -1,0 +1,98 @@
+.practice-hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 0 24px;
+}
+.practice-card {
+  width: 150px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow);
+}
+.practice-card img,
+.card-placeholder {
+  width: 100%;
+  aspect-ratio: 63 / 88;
+  object-fit: contain;
+  border-radius: 6px;
+}
+.card-placeholder {
+  background: radial-gradient(ellipse at 80% 20%, #7b5eb4, transparent 70%), #292b42;
+  color: #eee8ff;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+}
+.card-placeholder > span {
+  font-size: 42px;
+}
+.card-placeholder small {
+  color: #d9d0f3;
+}
+.practice-card strong,
+.practice-card h3 {
+  font-size: 12px;
+  line-height: 1.4;
+}
+.practice-card small {
+  font-size: 10px;
+}
+.practice-card .button,
+.practice-card select {
+  font-size: 11px;
+  padding: 6px;
+  width: 100%;
+}
+.practice-card .field {
+  font-size: 10px;
+}
+.practice-card.tapped {
+  border-color: var(--brand);
+  background: var(--brand-tint);
+}
+.practice-card.tapped img,
+.practice-card.tapped .card-placeholder {
+  transform: rotate(4deg);
+}
+.bottom-choice {
+  cursor: pointer;
+  position: relative;
+}
+.bottom-choice input {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
+}
+.bottom-choice.selected {
+  border: 2px solid var(--brand);
+  padding: 7px;
+  background: var(--brand-tint);
+}
+.card-move {
+  margin-top: auto;
+  display: flex;
+  gap: 4px;
+}
+.card-move label {
+  min-width: 0;
+}
+.card-move .button {
+  width: auto;
+}
+.table-zone {
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+  margin-top: 20px;
+}
+@media (max-width: 640px) {
+  .practice-card {
+    width: calc(50% - 6px);
+  }
+}

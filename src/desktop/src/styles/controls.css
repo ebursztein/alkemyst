@@ -1,0 +1,210 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.35;
+  box-shadow: var(--shadow);
+  transition:
+    background 0.12s,
+    box-shadow 0.12s;
+  cursor: pointer;
+}
+.button:hover {
+  text-decoration: none;
+}
+.button-primary {
+  background: var(--brand);
+  color: var(--surface);
+  border-color: var(--brand);
+}
+.button-primary:hover {
+  background: var(--brand-hover);
+}
+.button-secondary {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+}
+.button-secondary:hover {
+  background: var(--surface-alt);
+}
+.button-quiet {
+  background: transparent;
+  color: var(--muted);
+  box-shadow: none;
+}
+.button-quiet:hover {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+.button-danger {
+  background: var(--error-bg);
+  color: var(--error);
+}
+.button:disabled,
+.button[data-disabled] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.button[data-loading] {
+  cursor: progress;
+  opacity: 0.7;
+}
+.spinner {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.field {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 16px;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+.field input,
+.field select,
+.field textarea,
+.card-move select {
+  color: var(--ink);
+  background: var(--surface);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  min-width: 0;
+  width: 100%;
+  box-shadow: var(--shadow);
+  font-size: 13px;
+}
+.field textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+.field small {
+  font-weight: 400;
+}
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
+}
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  margin: 16px 0;
+}
+.checkbox input,
+.bottom-choice input {
+  accent-color: var(--brand);
+  width: 16px;
+  height: 16px;
+}
+.form-section {
+  border: 0;
+  padding: 0;
+  margin: 24px 0 12px;
+  min-width: 0;
+}
+.form-section legend {
+  font-size: 13px;
+  font-weight: 650;
+  margin-bottom: 12px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.form-grid .field {
+  margin-bottom: 0;
+}
+.import-panel {
+  width: min(100%, 600px);
+  margin: 0;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.selection-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+.selection-row:hover {
+  color: var(--brand);
+}
+.selection-row:last-child {
+  border-bottom: 0;
+}
+.selection-row > span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.run-picker {
+  max-width: 600px;
+}
+.metadata {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 8px 20px;
+  font-size: 12px;
+}
+.metadata dt {
+  color: var(--muted);
+}
+.metadata dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.connection-config {
+  font-size: 12px;
+  background: var(--surface-alt);
+  padding: 18px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+@media (max-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .panel-heading {
+    flex-wrap: wrap;
+  }
+  .selection-row {
+    align-items: start;
+    flex-direction: column;
+    gap: 4px;
+  }
+}

@@ -13,7 +13,7 @@ impl Decks {
         origin: Origin,
     ) -> Result<DeckVersion> {
         validation::request_key(key)?;
-        let body = json!({"origin":origin,"input":input}).to_string();
+        let body = json!({"input":input}).to_string();
         let receipts = self.db.read(decks::RECEIPT_GET, vec![json!(key)]).await?;
         if let Some(receipt) = receipts.first() {
             if receipt["operation"] != "decks.importArena" || receipt["body"] != body {

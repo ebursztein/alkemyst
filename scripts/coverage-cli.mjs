@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
+import { startLocalService } from "./local-service.mjs";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 
-export function coverRustCli() {
+export async function coverRustCli() {
   const directory = mkdtempSync(join("work", "coverage-cli-"));
   const run = (example, args) =>
     JSON.parse(
@@ -36,6 +37,16 @@ export function coverRustCli() {
     const resolution = run("catalog", ["resolve", database, "42", "999"]);
     assert.equal(resolution[0].name, "Forgeblade");
     assert.equal(resolution[1].name, null);
+    const service = await startLocalService({ database, coverage: true });
+    try {
+      const response = await fetch(`${service.baseUrl}/v1/decks`, {
+        headers: { Authorization: `Bearer ${service.token}` },
+      });
+      assert.equal(response.status, 200);
+      assert.deepEqual((await response.json()).items, []);
+    } finally {
+      await service.stop();
+    }
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

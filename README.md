@@ -53,5 +53,36 @@ The core provides immutable deck versions, idempotent creation, append-only
 agent edits, notes, and Arena text import/export. Captured card references retain
 Arena IDs; library selections can use Oracle IDs or exact Scryfall printings.
 Unknown imports are reported instead of silently dropping card lines. SQLite
-triggers protect sealed versions, including their card lists. REST/MCP and desktop
-interfaces are being built on these shared operations.
+triggers protect sealed versions, including their card lists. REST and the generated
+TypeScript SDK now expose these operations; MCP and desktop integration are next.
+
+## Local API development
+
+The Axum service exposes catalog search/refresh, card resolution, deck versions,
+Arena import/export and notes. `/openapi.json` is the OpenAPI 3.1 contract;
+`/v1/discovery` lists implemented operations. Both require a local bearer credential.
+Only `/v1/health`, containing build identity, is public. The listener refuses
+non-loopback addresses and protects application data with host, origin and bearer
+checks. The production origin allowlist covers Tauri; the developer example also
+permits Vite on localhost port 1420. Never expose the service through a tunnel.
+
+```sh
+# Generate a disposable credential without placing it in shell history.
+export ALKEMYST_TOKEN=$(openssl rand -hex 32)
+cargo run -p alkemyst-core --example local_service -- work/catalog.sqlite3
+```
+
+The example prints its base URL and process ID, never the credential. Keep the
+credential out of URLs and logs. Ctrl-C stops the listener. Native bootstrap will
+supply connection details to the desktop; this example is a developer entry point.
+
+`@alkemyst/sdk` provides `createAlkemystClient({ baseUrl, token })` and
+`createAlkemystQueryClient({ baseUrl, token })`. Types are generated from Rust's
+OpenAPI contract with `pnpm sdk:generate`; `pnpm sdk:check` rejects drift. Commands
+carry an `idempotency_key` and `input`; retrying the same logical command returns
+the original result, including when retried through another transport. Changed
+input with a reused key returns a typed conflict. Pagination uses opaque cursors.
+
+SDK integration tests launch an isolated Rust service with synthetic card data.
+They exercise real HTTP authentication, deck retries, search, errors and TanStack
+Query access without downloading cards or reading personal Arena history.

@@ -15,7 +15,7 @@ impl Decks {
             ));
         }
         let id = uuid::Uuid::new_v4().to_string();
-        let body = json!({"origin":origin,"input":input}).to_string();
+        let body = json!({"input":input}).to_string();
         let writes = vec![
             write(
                 decks::RECEIPT,

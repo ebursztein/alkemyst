@@ -1,5 +1,5 @@
 use serde::Serialize;
-use utoipa::{OpenApi, ToSchema};
+use utoipa::ToSchema;
 
 #[derive(Debug, Serialize, ToSchema)]
 pub struct BuildInfo {
@@ -21,12 +21,3 @@ pub fn build_info() -> BuildInfo {
         version: env!("CARGO_PKG_VERSION"),
     }
 }
-
-#[derive(OpenApi)]
-#[openapi(
-    paths(build_info),
-    components(schemas(BuildInfo)),
-    info(title = "Alkemyst API"),
-    servers((url = "http://127.0.0.1:47831", description = "Local Alkemyst service"))
-)]
-pub struct ApiDoc;

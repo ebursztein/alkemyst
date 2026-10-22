@@ -17,7 +17,7 @@ impl Decks {
     ) -> Result<DeckVersion> {
         validation::request_key(key)?;
         validation::deck(&input.name, &input.format, &mut input.cards)?;
-        let body = json!({"origin":origin,"input":input}).to_string();
+        let body = json!({"input":input}).to_string();
         self.new_deck(key, input, origin, "decks.create", body)
             .await
     }
@@ -71,7 +71,7 @@ impl Decks {
     ) -> Result<DeckVersion> {
         validation::request_key(key)?;
         validation::deck(&input.name, &input.format, &mut input.cards)?;
-        let body = json!({"origin":origin,"input":input}).to_string();
+        let body = json!({"input":input}).to_string();
         let id = uuid::Uuid::new_v4().to_string();
         let prefix = vec![write(
             decks::RECEIPT,

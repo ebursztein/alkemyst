@@ -11,6 +11,7 @@ pub(super) enum Command {
     Source(PathBuf, Statement, Reply<Vec<Value>>),
     Explain(Statement, Vec<Value>, Reply<Vec<String>>),
     Metrics(Reply<Metrics>),
+    Backup(PathBuf, Reply<()>),
     Close(Reply<()>),
 }
 
@@ -63,6 +64,9 @@ impl Engine {
                         Command::Metrics(reply) => {
                             let _ = reply.send(Ok(worker.metrics()));
                         }
+                        Command::Backup(path, reply) => {
+                            let _ = reply.send(worker.backup(&path));
+                        }
                         Command::Close(reply) => {
                             let _ = reply.send(Ok(()));
                             break;
@@ -105,6 +109,13 @@ impl Engine {
 
     pub async fn metrics(&self) -> Result<Metrics> {
         self.request(Command::Metrics).await
+    }
+
+    /// Publish a standalone, consistent SQLite snapshot at a new destination.
+    /// Existing paths are never replaced, including aliases of the live database.
+    pub async fn backup_to(&self, destination: &Path) -> Result<()> {
+        self.request(|reply| Command::Backup(destination.to_path_buf(), reply))
+            .await
     }
 
     /// Stop this database worker, including access through existing clones.

@@ -186,6 +186,10 @@ impl Worker {
             ..self.metrics.clone()
         }
     }
+
+    pub fn backup(&self, destination: &Path) -> Result<()> {
+        super::snapshot::write(&self.connection, destination)
+    }
 }
 
 fn bindings<'a>(params: impl Iterator<Item = &'a Value>) -> Result<Vec<Binding>> {

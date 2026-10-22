@@ -1,6 +1,7 @@
 //! Serialized SQLite access shared by every application adapter.
 mod cache;
 mod engine;
+mod snapshot;
 mod worker;
 
 pub use engine::Engine;

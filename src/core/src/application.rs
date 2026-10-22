@@ -18,6 +18,16 @@ pub struct Application {
 }
 
 impl Application {
+    /// Validate an allowlisted agent call before invoking the shared domain operation.
+    /// Transport authentication and user-selected sharing scopes remain adapter duties.
+    pub async fn invoke_agent(
+        &self,
+        name: &str,
+        arguments: serde_json::Value,
+    ) -> Result<serde_json::Value, crate::api::problem::ApiError> {
+        crate::agent::invoke(self, name, arguments).await
+    }
+
     pub fn new(db: Engine) -> Self {
         Self::with_bulk_provider(db, std::sync::Arc::new(Scryfall))
     }

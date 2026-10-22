@@ -1,6 +1,7 @@
 //! Serialized SQLite access shared by every application adapter.
 mod cache;
 mod engine;
+mod migrations;
 mod snapshot;
 mod worker;
 

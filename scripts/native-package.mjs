@@ -83,12 +83,17 @@ export function stageNativePackage({
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const git = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+  if (git("status", "--porcelain"))
+    throw new Error("Commit the package candidate before building source-bound artifacts");
+  const commit = git("rev-parse", "HEAD");
   buildNativePackage();
+  if (git("status", "--porcelain") || git("rev-parse", "HEAD") !== commit)
+    throw new Error("Package source changed during the build");
   const { target } = platformSettings(process.platform);
   const { version } = JSON.parse(
     readFileSync(join(desktop, "src-tauri", "tauri.conf.json"), "utf8"),
   );
-  const commit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
   const manifest = stageNativePackage({
     bundleDir: join(root, "target", target, "release", "bundle"),
     outputDir: join(root, "work", "packages", target),

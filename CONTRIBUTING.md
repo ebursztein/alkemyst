@@ -8,6 +8,10 @@ The desktop UI and MCP never access storage directly. SQL owns joins, filtering,
 grouping and pagination. A bounded statement result cache uses committed table
 revisions. All application sources live under src/.
 
+Storage migrations are append-only. Preserve existing migration scripts: restore
+validates older backups against their historical schema before migrating a private
+copy. New schemas must keep legacy-backup, corruption and unchanged-source tests.
+
 Use small modules (300 physical lines maximum), explicit package exports and
 separate test files. Rust unit-test modules reference separate files; integration
 tests belong in tests/. TypeScript tests use *.test.ts or *.test.tsx.

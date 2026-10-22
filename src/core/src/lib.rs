@@ -1,4 +1,5 @@
 //! Shared application core. Transports consume the same operations.
+pub mod agent;
 pub mod api;
 mod application;
 pub use application::Application;

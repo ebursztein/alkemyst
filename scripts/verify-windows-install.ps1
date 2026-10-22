@@ -22,11 +22,7 @@ if ([BitConverter]::ToUInt16($Bytes, $PeOffset + 4) -ne 0x8664) {
 }
 $Version = (Get-Item $Executable).VersionInfo
 if ($Version.ProductName -ne "Alkemyst") { throw "Installed executable product name differs." }
-$ExpectedVersion = [version](($Manifest.version -split "-")[0])
-$ActualVersion = [version]$Version.FileVersion
-if ($ActualVersion.Major -ne $ExpectedVersion.Major -or
-    $ActualVersion.Minor -ne $ExpectedVersion.Minor -or
-    $ActualVersion.Build -ne $ExpectedVersion.Build) {
+if ($Version.FileVersion -ne $Manifest.version) {
   throw "Installed executable version differs from the package."
 }
 node (Join-Path $PSScriptRoot "installed-runtime.mjs") $Executable

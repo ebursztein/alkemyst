@@ -13,8 +13,11 @@ and provider credentials are not included. Keep backups somewhere you control.
 
 1. Choose **Restore backup…** and select an Alkemyst backup.
 2. Alkemyst validates a private copy without modifying the selected file. The
-   supported storage schema, SQLite integrity, CHECK constraints, and foreign keys
-   must match. Unrelated SQLite files and newer or incompatible schemas are refused.
+   declared schema, SQLite integrity, CHECK constraints, and foreign keys are
+   checked. A known older schema is matched against the application's historical
+   migrations, then upgraded on the private copy using those compiled migrations.
+   Integrity and the current schema are checked again afterward. Unrelated SQLite
+   files, modified legacy schemas and newer or incompatible schemas are refused.
 3. Review the confirmation. **Keep current library** cancels the selection. Merely
    selecting a file never schedules a restore.
 4. **Restart and restore** publishes a confirmed request and restarts Alkemyst
@@ -47,7 +50,9 @@ tracked separately; this workflow does not imply an installer has been published
 
 Core tests exercise standalone WAL snapshots, cached reads after restore,
 immutable versions, capture checkpoints, unchanged source files, and malformed
-schemas/data. Native runtime tests exercise cancellation, confirmed restart,
+schemas/data. Legacy tests cover earlier schema versions, deck/card/note retention,
+cache invalidation and byte-for-byte unchanged original backups, including rejected
+corruptions. Native runtime tests exercise cancellation, confirmed restart,
 safety backups and quarantine. Browser tests simulate OS dialogs while using the
 real Rust application API; they verify keyboard focus, confirmation and WCAG
 accessibility. Native smoke tests render the Settings controls through actual IPC.

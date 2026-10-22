@@ -6,6 +6,31 @@ app and DMG; Windows targets x64 and produces an unsigned NSIS installer. These
 are preview artifacts. Trusted signing and Apple notarization remain required
 before stable distribution.
 
+## Installing a verified preview
+
+Published previews provide a platform installer, `SHA256SUMS` and a source
+manifest. Draft releases are visible only to repository maintainers; a draft does
+not establish an available public download.
+
+For macOS, verify the downloaded DMG with `shasum -a 256`, open it and copy
+Alkemyst into Applications. The app targets Apple Silicon and macOS 13+. Previews
+are ad-hoc signed and unnotarized; macOS may block the first launch. Apple's
+[guide to opening an app from an unidentified developer](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac)
+describes the explicit system-settings choice for apps you trust.
+
+For Windows 11 x64, compare `Get-FileHash <installer> -Algorithm SHA256` with
+`SHA256SUMS`, run the setup executable, then open Alkemyst from the Start menu.
+Previews are unsigned and may trigger Windows reputation prompts. Uninstall
+through Windows Settings. History and backups use the operating system's
+application-data directory. Save a backup from Settings before uninstalling or
+replacing a preview.
+
+Closing a window keeps capture and MCP running in the tray. Use Quit to stop the
+app. Launch at login is opt-in. Card metadata needs its first download; imported
+metadata, decks and recorded games then remain local and usable offline, while
+artwork still loads online. Settings includes backup/restore and MCP connection
+information. Keep a backup before testing a new preview.
+
 The packaging wrapper sets `CI=true`: Tauri then skips create-dmg's Finder cosmetic
 layout. The interactive layout step can fail with a Finder AppleEvent timeout in
 automated sessions. The DMG still includes the app and Applications shortcut.

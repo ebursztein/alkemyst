@@ -9,7 +9,7 @@ use crate::{
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json::{Value, json};
 
-pub async fn invoke(app: &Application, name: &str, args: Value) -> Result<Value, ApiError> {
+pub(super) async fn invoke(app: &Application, name: &str, args: Value) -> Result<Value, ApiError> {
     match name {
         "practiceCreate" => {
             let c: crate::api::CreatePracticeCommand = decode(args)?;

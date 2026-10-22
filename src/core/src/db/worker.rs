@@ -22,60 +22,7 @@ impl Worker {
         };
         connection.busy_timeout(Duration::from_secs(5))?;
         connection.execute_batch(system::CONFIGURE)?;
-        let version: i64 = connection.query_row(system::SCHEMA_VERSION, [], |row| row.get(0))?;
-        if version > 9 {
-            return Err(Error::FutureSchema);
-        }
-        if version == 0 {
-            let transaction = connection.transaction()?;
-            transaction.execute_batch(system::INITIAL)?;
-            transaction.commit()?;
-        }
-        if version < 2 {
-            let transaction = connection.transaction()?;
-            transaction.execute_batch(system::CATALOG)?;
-            transaction.commit()?;
-        }
-        if version < 3 {
-            let transaction = connection.transaction()?;
-            transaction.execute_batch(system::ARENA_ALIASES)?;
-            transaction.commit()?;
-        }
-        if version < 4 {
-            let transaction = connection.transaction()?;
-            transaction.execute_batch(system::DECKS)?;
-            transaction.commit()?;
-        }
-        if version < 5 {
-            let transaction = connection.transaction()?;
-            transaction.execute_batch(system::RECEIPT_ORIGINS)?;
-            transaction.commit()?;
-        }
-        if version < 6 {
-            let transaction = connection.transaction()?;
-            transaction.execute_batch(system::CAPTURE)?;
-            transaction.commit()?;
-        }
-        if version < 7 {
-            let transaction = connection.transaction()?;
-            transaction.execute_batch(system::HISTORY_ORDER)?;
-            transaction.execute_batch(system::HISTORY_MATCH_FACTS)?;
-            transaction.execute_batch(system::HISTORY_FACTS)?;
-            transaction.execute_batch(system::HISTORY_SUMMARIES)?;
-            transaction.execute_batch(system::HISTORY_MATCHES)?;
-            transaction.commit()?;
-        }
-        if version < 8 {
-            let transaction = connection.transaction()?;
-            transaction.execute_batch(system::SIMULATIONS)?;
-            transaction.execute_batch(system::SIMULATION_DETAILS)?;
-            transaction.commit()?;
-        }
-        if version < 9 {
-            let transaction = connection.transaction()?;
-            transaction.execute_batch(system::PRACTICE)?;
-            transaction.commit()?;
-        }
+        super::migrations::apply_to(&mut connection, super::migrations::CURRENT_VERSION)?;
         let table_revisions = connection
             .prepare_cached(system::REVISIONS)?
             .query_map([], |row| {

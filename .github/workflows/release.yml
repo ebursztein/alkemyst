@@ -1,0 +1,89 @@
+name: Draft preview release
+on:
+  push:
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - ".github/workflows/release.yml"
+      - ".github/workflows/checks.yml"
+      - ".github/workflows/security.yml"
+      - ".github/workflows/installers.yml"
+      - "scripts/release-*.mjs"
+      - "scripts/preview-release.mjs"
+      - "scripts/tests/release-*.test.mjs"
+permissions:
+  contents: read
+concurrency:
+  group: preview-release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  source:
+    name: Preview release contracts
+    runs-on: ubuntu-24.04
+    outputs:
+      commit: ${{ steps.source.outputs.commit }}
+      version: ${{ steps.source.outputs.version }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - run: npm install --global pnpm@10.33.2
+      - run: pnpm install --frozen-lockfile
+      - run: node --test scripts/tests/release-*.test.mjs
+      - run: node scripts/preview-release.mjs --check-version
+      - name: Require a clean version-matched preview tag from main
+        if: github.event_name == 'push'
+        id: source
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node scripts/preview-release.mjs --check-source "$RELEASE_TAG"
+  quality:
+    if: github.event_name == 'push'
+    needs: source
+    uses: ./.github/workflows/checks.yml
+  security:
+    if: github.event_name == 'push'
+    needs: source
+    uses: ./.github/workflows/security.yml
+  installers:
+    if: github.event_name == 'push'
+    needs: source
+    uses: ./.github/workflows/installers.yml
+  draft:
+    name: Assemble verified draft preview
+    if: github.event_name == 'push'
+    needs: [source, quality, security, installers]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ github.ref_name }}
+      EXPECTED_COMMIT: ${{ needs.source.outputs.commit }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - run: npm install --global pnpm@10.33.2
+      - run: pnpm install --frozen-lockfile
+      - name: Reject a tag changed during verification
+        run: |
+          git fetch origin "refs/tags/$RELEASE_TAG"
+          test "$(git rev-parse 'FETCH_HEAD^{commit}')" = "$EXPECTED_COMMIT"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: preview-*
+          path: work/release-artifacts/
+      - run: node scripts/preview-release.mjs --publish-draft "$RELEASE_TAG"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: verified-preview-release
+          path: work/release/
+          if-no-files-found: error
+          retention-days: 30

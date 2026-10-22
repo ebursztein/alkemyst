@@ -28,6 +28,7 @@ pub struct Problem {
     pub unresolved: Option<Vec<String>>,
 }
 
+#[derive(Debug)]
 pub struct ApiError {
     pub status: StatusCode,
     pub problem: Problem,

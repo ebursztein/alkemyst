@@ -1,0 +1,196 @@
+use super::Tool;
+use crate::ApiDoc;
+use serde_json::{Value, json};
+use utoipa::OpenApi;
+
+// Adding a REST endpoint never grants an agent a new capability implicitly.
+pub const ALLOWLIST: &[&str] = &[
+    "practiceCreate",
+    "practiceList",
+    "practiceGet",
+    "practiceInputsGet",
+    "practiceAct",
+    "deckVersionsCompare",
+    "simulationsCreate",
+    "simulationsList",
+    "simulationGet",
+    "simulationInputsGet",
+    "simulationCancel",
+    "probabilityDraw",
+    "probabilityJoint",
+    "analysisProfileGet",
+    "gamesList",
+    "gameGet",
+    "gameTimeline",
+    "gameTurns",
+    "matchesList",
+    "matchGet",
+    "statisticsGet",
+    "captureStatusGet",
+    "systemDiscovery",
+    "cardsSearch",
+    "cardsGet",
+    "cardsResolveArena",
+    "cardsResolveReferences",
+    "catalogStatusGet",
+    "catalogRefresh",
+    "decksList",
+    "deckVersionsList",
+    "decksCreate",
+    "deckVersionGet",
+    "deckVersionCreate",
+    "deckArenaImport",
+    "deckArenaExport",
+    "notesList",
+    "notesCreate",
+];
+
+pub fn tools() -> Vec<Tool> {
+    let document = serde_json::to_value(ApiDoc::openapi()).expect("OpenAPI serialization");
+    from_openapi(&document)
+}
+
+pub fn from_openapi(document: &Value) -> Vec<Tool> {
+    let mut tools = vec![];
+    for path in document["paths"]
+        .as_object()
+        .expect("OpenAPI paths")
+        .values()
+    {
+        for (method, operation) in path.as_object().expect("OpenAPI path item") {
+            let Some(id) = operation["operationId"].as_str() else {
+                continue;
+            };
+            if !ALLOWLIST.contains(&id) {
+                continue;
+            }
+            let mut input =
+                operation["requestBody"]["content"]["application/json"]["schema"].clone();
+            if input.is_null() {
+                input = json!({"type":"object", "properties":{}, "required":[], "additionalProperties":false});
+            }
+            // Tool roots must be objects, so resolve the request's top-level reference.
+            if let Some(reference) = input["$ref"].as_str() {
+                input = document
+                    .pointer(reference.strip_prefix('#').expect("local ref"))
+                    .expect("OpenAPI schema")
+                    .clone();
+            }
+            // Body-bearing operations can also have path/query parameters. They
+            // belong in the flat agent input, while the REST body remains unchanged.
+            let mut required = input["required"].as_array().cloned().unwrap_or_default();
+            for param in operation["parameters"].as_array().into_iter().flatten() {
+                let name = param["name"].as_str().expect("OpenAPI parameter name");
+                assert!(
+                    input["properties"].get(name).is_none(),
+                    "Agent input parameter collides with a body field"
+                );
+                input["properties"][name] = param["schema"].clone();
+                if param["required"] == true {
+                    required.push(json!(name));
+                }
+            }
+            input["required"] = json!(required);
+            localize(&mut input, document);
+            let description = operation["description"]
+                .as_str()
+                .or(operation["summary"].as_str())
+                .unwrap_or(id)
+                .to_owned();
+            let success = operation["responses"]
+                .as_object()
+                .expect("OpenAPI responses")
+                .iter()
+                .filter(|(status, _)| status.starts_with('2'))
+                .map(|(_, response)| &response["content"]["application/json"]["schema"])
+                .find(|schema| !schema.is_null())
+                .expect("Allowed tools need a successful JSON response");
+            let mut output = json!({"type":"object","properties":{"data":success},"required":["data"],"additionalProperties":false});
+            localize(&mut output, document);
+            let read_only = method == "get"
+                || [
+                    "cardsSearch",
+                    "cardsResolveArena",
+                    "cardsResolveReferences",
+                    "probabilityDraw",
+                    "probabilityJoint",
+                ]
+                .contains(&id);
+            tools.push(Tool {
+                name: id.to_owned(),
+                description,
+                input_schema: input.as_object().expect("object schema").clone(),
+                output_schema: output.as_object().expect("object schema").clone(),
+                read_only,
+                open_world: id == "catalogRefresh",
+            });
+        }
+    }
+    tools.sort_by(|a, b| a.name.cmp(&b.name));
+    assert_eq!(
+        tools.len(),
+        ALLOWLIST.len(),
+        "Every allowed tool must have one OpenAPI operation"
+    );
+    tools
+}
+
+fn rewrite_refs(value: &mut Value) {
+    match value {
+        Value::Object(object) => {
+            if let Some(Value::String(reference)) = object.get_mut("$ref") {
+                *reference = reference.replace("#/components/schemas/", "#/$defs/");
+            }
+            for value in object.values_mut() {
+                rewrite_refs(value);
+            }
+        }
+        Value::Array(values) => {
+            for value in values {
+                rewrite_refs(value);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn localize(schema: &mut Value, document: &Value) {
+    let mut definitions = serde_json::Map::new();
+    collect_definitions(schema, document, &mut definitions);
+    schema["$defs"] = Value::Object(definitions);
+    rewrite_refs(schema);
+}
+
+fn collect_definitions(
+    value: &Value,
+    document: &Value,
+    definitions: &mut serde_json::Map<String, Value>,
+) {
+    match value {
+        Value::Object(object) => {
+            if let Some(reference) = object.get("$ref").and_then(Value::as_str) {
+                let name = reference
+                    .strip_prefix("#/components/schemas/")
+                    .expect("Only local OpenAPI references are supported");
+                if !definitions.contains_key(name) {
+                    let definition = document
+                        .pointer(reference.strip_prefix('#').unwrap())
+                        .expect("Referenced OpenAPI schema")
+                        .clone();
+                    // Insert before walking to terminate recursive types.
+                    definitions.insert(name.into(), definition.clone());
+                    collect_definitions(&definition, document, definitions);
+                }
+            }
+            for child in object.values() {
+                collect_definitions(child, document, definitions);
+            }
+        }
+        Value::Array(values) => {
+            for child in values {
+                collect_definitions(child, document, definitions);
+            }
+        }
+        _ => {}
+    }
+}

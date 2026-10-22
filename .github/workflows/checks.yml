@@ -33,7 +33,7 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
       - run: pnpm test:site
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: coverage-and-browser-reports
@@ -74,7 +74,7 @@ jobs:
         if: failure() && runner.os == 'Windows' && steps.native-compile.outcome == 'success'
         shell: pwsh
         run: ./scripts/windows-loader-report.ps1
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: failure() && runner.os == 'Windows'
         with:
           name: windows-loader-report

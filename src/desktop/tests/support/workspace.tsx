@@ -7,6 +7,7 @@ import type { LocalService } from "../../../../scripts/local-service.mjs";
 // This fixture emulates only native integration; application data uses real HTTP.
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(async (command: string) => {
+    if (command === "native_restore_status") return { state: "none" };
     if (command === "native_settings")
       return {
         launch_at_login: false,

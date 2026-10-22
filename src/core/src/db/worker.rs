@@ -190,6 +190,17 @@ impl Worker {
     pub fn backup(&self, destination: &Path) -> Result<()> {
         super::snapshot::write(&self.connection, destination)
     }
+
+    pub fn stage_backup(&self, source: &Path, destination: &Path) -> Result<()> {
+        super::snapshot::stage(&self.connection, source, destination)
+    }
+
+    pub fn restore(&mut self, source: &Path) -> Result<()> {
+        let revisions = super::snapshot::restore(&mut self.connection, source)?;
+        self.cache.clear();
+        self.metrics.table_revisions = revisions;
+        Ok(())
+    }
 }
 
 fn bindings<'a>(params: impl Iterator<Item = &'a Value>) -> Result<Vec<Binding>> {

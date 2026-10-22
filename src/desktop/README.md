@@ -24,8 +24,8 @@ MIT button attribution is preserved; see `public/licenses/untitled-ui.txt` and `
 
 `pnpm verify`, `pnpm security` and `pnpm test:e2e` run from the repository root.
 Vitest workflows use an isolated native backend with public card metadata; the
-history fixture is sanitized. Browser tests replace only the native connection
-bootstrap, use the actual API/SQL worker, and run keyboard, narrow-window, theme
+history fixture is sanitized. Browser tests replace native integration (connection
+bootstrap, settings and OS dialogs), use the actual API/SQL worker, and run keyboard, narrow-window, theme
 and WCAG Axe checks. They never open the user's database or Arena logs.
 
 `pnpm dev` starts the browser development surface at port 1420. Without a native
@@ -48,7 +48,11 @@ a real native window and tray against an isolated temporary database: close the
 window, ingest a sanitized game, initialize MCP, then Quit and verify HTTP stopped.
 The smoke feature is test infrastructure and is excluded from release builds.
 
+Settings includes [local backup and restore](BACKUPS.md), with explicit restart
+confirmation and a safety backup of the previous library.
+
 Coverage includes the native build script and real-window smoke test. Native
-packaging and Windows GUI verification remain in progress. Linux-only Tauri transitives have exact, expiring OSV exceptions with automated
+window/tray checks run on macOS and Windows CI; packaging and installer verification
+remain in progress. Linux-only Tauri transitives have exact, expiring OSV exceptions with automated
 target-exclusion checks; see the root SECURITY.md and Sprinty S05-008. No preview installer is
 published, and stable signing/notarization remains a release prerequisite.

@@ -51,10 +51,26 @@ execFileSync(
 
 const total = report.data[0].totals.lines;
 console.info(`Rust line coverage: ${total.percent.toFixed(2)}% (${total.covered}/${total.count})`);
+const adopted = files.filter((file) =>
+  file.filename.replaceAll("\\", "/").includes("/src/landlord/src/"),
+);
+const landlord = adopted.reduce(
+  (sum, file) => ({
+    covered: sum.covered + file.summary.lines.covered,
+    count: sum.count + file.summary.lines.count,
+  }),
+  { covered: 0, count: 0 },
+);
+const landlordSummary =
+  landlord.count > 0
+    ? `Maintained landlord lines: **${((100 * landlord.covered) / landlord.count).toFixed(2)}%** (${landlord.covered}/${landlord.count}), independently requires 90%.\n`
+    : "";
+if (landlordSummary) console.info(landlordSummary.trim());
 if (process.env.GITHUB_STEP_SUMMARY) {
   let summary =
     `## Coverage\n\nRust lines: **${total.percent.toFixed(2)}%** (${total.covered}/${total.count}). ` +
-    "SQL engine and domain each independently require 90%.\n";
+    "SQL engine and domain each independently require 90%.\n" +
+    landlordSummary;
   if (existsSync("coverage/coverage-summary.json")) {
     const ts = JSON.parse(readFileSync("coverage/coverage-summary.json", "utf8")).total;
     summary +=

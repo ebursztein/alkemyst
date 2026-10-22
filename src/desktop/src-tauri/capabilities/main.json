@@ -1,0 +1,6 @@
+{
+  "identifier": "main",
+  "description": "Main local desktop window; application data is served by the authenticated SDK.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

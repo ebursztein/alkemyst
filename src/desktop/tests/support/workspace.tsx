@@ -4,6 +4,13 @@ import { afterEach, beforeAll, vi } from "vitest";
 import { DesktopApp } from "../../src/app/desktop-app.js";
 import { createServices, type Services } from "../../src/app/services.js";
 import type { LocalService } from "../../../../scripts/local-service.mjs";
+// This fixture emulates only native integration; application data uses real HTTP.
+vi.mock("@tauri-apps/api/core", () => ({
+  invoke: vi.fn(async (command: string) => {
+    if (command === "native_settings") return { launch_at_login: false, tracking_paused: false };
+    throw new Error(`Unexpected native command: ${command}`);
+  }),
+}));
 let clients: Services[] = [];
 beforeAll(() => {
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});

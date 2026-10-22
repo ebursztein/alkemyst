@@ -8,13 +8,25 @@ const ignored = "(/rustc/|/\\.cargo/|/\\.rustup/|/target/|/tests/)";
 mkdirSync("coverage/rust", { recursive: true });
 mkdirSync("work", { recursive: true });
 execFileSync("cargo", ["llvm-cov", "clean", "--workspace"], { stdio: "inherit" });
-execFileSync("cargo", ["llvm-cov", "--workspace", "--locked", "--no-report"], { stdio: "inherit" });
+execFileSync(
+  "cargo",
+  [
+    "llvm-cov",
+    "--workspace",
+    "--locked",
+    "--features",
+    "alkemyst-desktop/native-smoke,alkemyst-desktop/custom-protocol",
+    "--no-report",
+  ],
+  { stdio: "inherit" },
+);
 await coverRustCli();
 execFileSync(
   "cargo",
   [
     "llvm-cov",
     "report",
+    "--include-build-script",
     "--json",
     "--output-path",
     "coverage/rust/coverage.json",
@@ -39,6 +51,7 @@ execFileSync(
   [
     "llvm-cov",
     "report",
+    "--include-build-script",
     "--lcov",
     "--output-path",
     "coverage/rust/lcov.info",

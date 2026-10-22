@@ -18,7 +18,7 @@
     "sdk:generate": "node scripts/generate-sdk.mjs",
     "sdk:check": "node scripts/generate-sdk.mjs --check",
     "test:rust": "cargo test --workspace --locked",
-    "coverage:rust": "node scripts/coverage-rust.mjs",
+    "coverage:rust": "pnpm --filter @alkemyst/desktop build && node scripts/coverage-rust.mjs",
     "security": "node scripts/security.mjs",
     "verify": "pnpm format:check && pnpm check:architecture && pnpm test:tooling && pnpm lint && pnpm typecheck && pnpm test:coverage && cargo fmt --all -- --check && cargo clippy --workspace --all-targets --locked -- -D warnings && pnpm test:rust && pnpm coverage:rust && pnpm sdk:check && pnpm api:lint",
     "test:tooling": "node --test scripts/tests/*.test.mjs",

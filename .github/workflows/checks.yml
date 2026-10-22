@@ -11,7 +11,7 @@ concurrency:
 jobs:
   quality:
     name: Quality gates
-    runs-on: ubuntu-24.04
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -55,4 +55,5 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: cargo test --workspace --locked
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
-      - run: pnpm --filter @alkemyst/desktop build
+      - run: pnpm --filter @alkemyst/desktop tauri build --debug --no-bundle --ci -- --locked
+      - run: pnpm --filter @alkemyst/desktop native:smoke

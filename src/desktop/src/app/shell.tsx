@@ -1,5 +1,6 @@
+import { watchSettingsNavigation } from "./native-navigation.js";
 import { useEffect, useRef } from "react";
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useServices } from "./services.js";
 const navigation = [
   { path: "/decks", label: "Decks", icon: "▤" },
@@ -10,6 +11,14 @@ const navigation = [
 ] as const;
 export function Shell() {
   const { api } = useServices();
+  const navigate = useNavigate();
+  useEffect(
+    () =>
+      watchSettingsNavigation(() => {
+        void navigate({ to: "/settings" });
+      }),
+    [navigate],
+  );
   const path = useRouterState({ select: (state) => state.location.pathname });
   const previous = useRef(path);
   useEffect(() => {

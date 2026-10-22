@@ -1,3 +1,4 @@
+import { NativeControls } from "../ui/native-controls.js";
 import { useState } from "react";
 import { useServices } from "../app/services.js";
 import { Button } from "../ui/button.js";
@@ -31,6 +32,7 @@ export function SettingsPage() {
           <p className="subtitle">Local data, card metadata and agent connections.</p>
         </div>
       </header>
+      <NativeControls />
       <section className="panel">
         <h2>Card library</h2>
         {catalog.isPending && <Loading />}
@@ -88,7 +90,8 @@ export function SettingsPage() {
         </div>
         <p>
           Connect your own agent while Alkemyst is running. Deck edits create new versions; captured
-          history remains immutable.
+          history remains immutable. Connection credentials rotate when the app restarts; copy the
+          current configuration after restarting.
         </p>
         <pre className="connection-config">{JSON.stringify(config, null, 2)}</pre>
         <div className="actions">

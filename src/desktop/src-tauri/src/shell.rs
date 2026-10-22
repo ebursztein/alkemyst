@@ -18,6 +18,7 @@ pub fn open_settings(app: &AppHandle) {
 
 fn build(options: Option<RuntimeOptions>, background: bool) -> tauri::Result<tauri::App> {
     let builder = tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             if !args.iter().any(|arg| arg == "--background") {
                 show(app);

@@ -11,6 +11,9 @@ pub(super) enum Command {
     Source(PathBuf, Statement, Reply<Vec<Value>>),
     Explain(Statement, Vec<Value>, Reply<Vec<String>>),
     Metrics(Reply<Metrics>),
+    Backup(PathBuf, Reply<()>),
+    StageBackup(PathBuf, PathBuf, Reply<()>),
+    Restore(PathBuf, Reply<()>),
     Close(Reply<()>),
 }
 
@@ -63,6 +66,15 @@ impl Engine {
                         Command::Metrics(reply) => {
                             let _ = reply.send(Ok(worker.metrics()));
                         }
+                        Command::Backup(path, reply) => {
+                            let _ = reply.send(worker.backup(&path));
+                        }
+                        Command::StageBackup(source, destination, reply) => {
+                            let _ = reply.send(worker.stage_backup(&source, &destination));
+                        }
+                        Command::Restore(path, reply) => {
+                            let _ = reply.send(worker.restore(&path));
+                        }
                         Command::Close(reply) => {
                             let _ = reply.send(Ok(()));
                             break;
@@ -105,6 +117,28 @@ impl Engine {
 
     pub async fn metrics(&self) -> Result<Metrics> {
         self.request(Command::Metrics).await
+    }
+
+    /// Publish a standalone, consistent SQLite snapshot at a new destination.
+    /// Existing paths are never replaced, including aliases of the live database.
+    pub async fn backup_to(&self, destination: &Path) -> Result<()> {
+        self.request(|reply| Command::Backup(destination.to_path_buf(), reply))
+            .await
+    }
+
+    /// Validate a private snapshot and publish it without modifying the selected source.
+    pub async fn stage_backup(&self, source: &Path, destination: &Path) -> Result<()> {
+        self.request(|reply| {
+            Command::StageBackup(source.to_path_buf(), destination.to_path_buf(), reply)
+        })
+        .await
+    }
+
+    /// Restore a validated snapshot. Native callers must stop application services first.
+    /// SQLite applies the replacement transactionally; result/prepared caches are cleared.
+    pub async fn restore_from(&self, source: &Path) -> Result<()> {
+        self.request(|reply| Command::Restore(source.to_path_buf(), reply))
+            .await
     }
 
     /// Stop this database worker, including access through existing clones.

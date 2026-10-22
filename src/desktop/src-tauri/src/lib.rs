@@ -1,8 +1,11 @@
+mod backup_commands;
+mod backups;
 mod commands;
 mod lifecycle;
 mod menus;
 mod runtime;
 mod shell;
+pub use backups::RestoreStatus;
 pub use lifecycle::{CloseAction, ExitAction, Lifecycle};
 pub use runtime::{LocalConnection, NativeRuntime, NativeTrackingStatus, RuntimeOptions, Tracking};
 

@@ -37,6 +37,8 @@ pub enum Error {
     Tracking(#[from] alkemyst_core::ingest::Error),
     #[error("local services are stopping")]
     Stopped,
+    #[error("no backup has been selected for restoration")]
+    NoRestore,
 }
 pub struct NativeTrackingStatus {
     pub paused: bool,
@@ -55,6 +57,7 @@ pub struct NativeRuntime {
     source: Tracking,
     stopping: AtomicBool,
     services: Mutex<Services>,
+    backups: crate::backups::Backups,
 }
 fn start_tracking(app: &Application, source: &Tracking) -> Option<TrackingTask> {
     match source {
@@ -75,6 +78,8 @@ impl NativeRuntime {
             std::fs::create_dir_all(parent)?;
         }
         let db = Engine::open(&options.database, 8 * 1024 * 1024)?;
+        let mut backups = crate::backups::Backups::new(db.clone(), options.database);
+        backups.recover().await?;
         let app = Application::new(db.clone());
         let generated = AuthConfig::generate();
         let auth = AuthConfig::new(generated.credential().to_owned(), options.development)?;
@@ -101,6 +106,7 @@ impl NativeRuntime {
             db,
             connection,
             source: options.tracking,
+            backups,
             stopping: AtomicBool::new(false),
             services: Mutex::new(Services {
                 server: Some(server),
@@ -115,6 +121,32 @@ impl NativeRuntime {
             return Err(Error::Stopped);
         }
         Ok(self.connection.clone())
+    }
+
+    pub fn restore_status(&self) -> crate::RestoreStatus {
+        self.backups.status.clone()
+    }
+    pub async fn backup_to(&self, path: &std::path::Path) -> Result<(), Error> {
+        self.ensure_running()?;
+        self.db.backup_to(path).await?;
+        Ok(())
+    }
+    pub async fn prepare_restore(&self, path: &std::path::Path) -> Result<(), Error> {
+        self.ensure_running()?;
+        self.backups.prepare(path).await
+    }
+    pub async fn cancel_restore(&self) {
+        self.backups.cancel().await;
+    }
+    pub async fn confirm_restore(&self) -> Result<(), Error> {
+        self.ensure_running()?;
+        self.backups.confirm().await
+    }
+    fn ensure_running(&self) -> Result<(), Error> {
+        if self.stopping.load(Ordering::Acquire) {
+            return Err(Error::Stopped);
+        }
+        Ok(())
     }
     pub async fn tracking_paused(&self) -> bool {
         self.services.lock().await.paused

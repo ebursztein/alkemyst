@@ -81,10 +81,18 @@ async fn exercise(app: &tauri::AppHandle, current: &std::path::Path) -> Result<(
             if (document.querySelector('h1')?.textContent === 'Decks' &&
                 document.body.textContent.includes('Your next brew starts here')) {
                 clearInterval(ready);
-                window.__TAURI_INTERNALS__.invoke('native_settings').then(settings => {
-                    if (typeof settings.launch_at_login !== 'boolean') throw Error('Invalid settings');
-                    return window.__TAURI_INTERNALS__.invoke('set_tracking_paused', { paused: true });
-                });
+                document.querySelector('a[href="/settings"]').click();
+                const settingsReady = setInterval(() => {
+                    if (document.querySelector('h1')?.textContent === 'Settings' &&
+                        Array.from(document.querySelectorAll('button')).some(button =>
+                            button.textContent === 'Save backup…')) {
+                        clearInterval(settingsReady);
+                        window.__TAURI_INTERNALS__.invoke('native_settings').then(settings => {
+                            if (typeof settings.launch_at_login !== 'boolean') throw Error('Invalid settings');
+                            return window.__TAURI_INTERNALS__.invoke('set_tracking_paused', { paused: true });
+                        });
+                    }
+                }, 100);
             }
         }, 100);
     "#).map_err(|e| e.to_string())?;

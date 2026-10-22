@@ -1,4 +1,6 @@
 import { NativeControls } from "../ui/native-controls.js";
+import { BackupControls } from "../ui/backup-controls.js";
+import "../styles/backups.css";
 import { useState } from "react";
 import { useServices } from "../app/services.js";
 import { Button } from "../ui/button.js";
@@ -33,6 +35,7 @@ export function SettingsPage() {
         </div>
       </header>
       <NativeControls />
+      <BackupControls />
       <section className="panel">
         <h2>Card library</h2>
         {catalog.isPending && <Loading />}

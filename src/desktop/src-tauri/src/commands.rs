@@ -4,7 +4,7 @@ use std::sync::Arc;
 use tauri::{AppHandle, Manager, Runtime, State, WebviewWindow};
 use tauri_plugin_autostart::ManagerExt;
 
-fn main_window<R: Runtime>(window: &WebviewWindow<R>) -> Result<(), String> {
+pub(crate) fn main_window<R: Runtime>(window: &WebviewWindow<R>) -> Result<(), String> {
     if window.label() == "main" {
         Ok(())
     } else {
@@ -86,5 +86,10 @@ pub fn configure_commands<R: Runtime>(builder: tauri::Builder<R>) -> tauri::Buil
         native_settings,
         set_launch_at_login,
         set_tracking_paused,
+        crate::backup_commands::create_backup,
+        crate::backup_commands::select_restore,
+        crate::backup_commands::cancel_restore,
+        crate::backup_commands::restore_and_restart,
+        crate::backup_commands::native_restore_status,
     ])
 }

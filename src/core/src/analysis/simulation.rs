@@ -2,8 +2,8 @@ use super::{Estimate, turns::*};
 use landlord::{Card, Error, London, REPLAY_VERSION, SimulationRng, sample_hand};
 use std::sync::Arc;
 
-pub const MODEL_VERSION: &str = "equipment-goldfish-v1";
-pub const POLICY: &str = "priority-greedy-v1";
+pub const MODEL_VERSION: &str = "equipment-goldfish-v2";
+pub const POLICY: &str = "priority-greedy-v2";
 
 #[derive(Clone)]
 pub struct Scenario {
@@ -21,6 +21,10 @@ pub struct TurnEstimate {
     pub attack_ready: Estimate,
     pub joint: Estimate,
     pub mean_equipment: f64,
+    pub mean_creatures: f64,
+    pub mean_cards_drawn: f64,
+    pub mean_cards_discarded: f64,
+    pub story_samples: u32,
     pub mean_legendary_bricks: f64,
     pub mean_life: f64,
     pub mean_tutors_cast: f64,
@@ -48,6 +52,10 @@ struct Totals {
     joint: u32,
     decked: u32,
     equipment_sum: u64,
+    creatures_sum: u64,
+    drawn_sum: u64,
+    discarded_sum: u64,
+    story: u32,
     bricks_sum: u64,
     life_sum: u64,
     tutors_sum: u64,
@@ -148,6 +156,10 @@ impl BattlefieldRunner {
                 total.joint += u32::from(self.scenario.goal.met(&frame));
                 total.decked += u32::from(frame.decked);
                 total.equipment_sum += frame.equipment as u64;
+                total.creatures_sum += frame.creatures as u64;
+                total.drawn_sum += frame.cards_drawn as u64;
+                total.discarded_sum += frame.cards_discarded as u64;
+                total.story += u32::from(frame.enduring_story);
                 total.bricks_sum += frame.legendary_bricks as u64;
                 total.life_sum += u64::from(frame.life);
                 total.tutors_sum += frame.tutors_cast as u64;
@@ -172,6 +184,10 @@ impl BattlefieldRunner {
                 attack_ready: Estimate::new(t.ready, self.completed),
                 joint: Estimate::new(t.joint, self.completed),
                 mean_equipment: t.equipment_sum as f64 / n,
+                mean_creatures: t.creatures_sum as f64 / n,
+                mean_cards_drawn: t.drawn_sum as f64 / n,
+                mean_cards_discarded: t.discarded_sum as f64 / n,
+                story_samples: t.story,
                 mean_legendary_bricks: t.bricks_sum as f64 / n,
                 mean_life: t.life_sum as f64 / n,
                 mean_tutors_cast: t.tutors_sum as f64 / n,

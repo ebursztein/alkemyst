@@ -31,6 +31,10 @@ impl Color {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Source(u8);
 impl Source {
+    /// Alternative colors from one physical source, still producing one unit.
+    pub fn union(self, other: Self) -> Self {
+        Self(self.0 | other.0)
+    }
     pub fn new(colors: &[Color]) -> Result<Self, Error> {
         if colors.is_empty() {
             return Err(Error::Mana("empty source".into()));
@@ -83,6 +87,13 @@ impl ManaCost {
         Ok(cost)
     }
 
+    /// Reduce generic mana only; colored, hybrid and explicit C pips remain.
+    pub fn reduced_generic(&self, amount: usize) -> Self {
+        Self {
+            generic: self.generic.saturating_sub(amount),
+            pips: self.pips.clone(),
+        }
+    }
     pub fn mana_value(&self) -> usize {
         self.generic + self.pips.len()
     }

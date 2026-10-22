@@ -11,6 +11,8 @@ fn filler(id: u32) -> CardSpec {
         printed_mana_value: 0,
         legendary: false,
         keep_priority: 0,
+        tags: Default::default(),
+        adventure: None,
         kind: Kind::Ignored,
     }
 }
@@ -36,6 +38,8 @@ fn invalid_modeled_abilities_fail_instead_of_being_silently_ignored() {
     for spell in [
         SpellSpec {
             tutor: Some(TutorSpec {
+                scope: SearchScope::Library,
+                types: SearchTypes::Equipment,
                 timing: TutorTiming::EnterBattlefield,
                 destination: Destination::Hand,
                 max_mana_value: None,
@@ -84,6 +88,7 @@ fn invalid_modeled_abilities_fail_instead_of_being_silently_ignored() {
             enters,
             restriction: Restriction::Any,
             basic_types,
+            conditional: vec![],
         });
         assert!(!accepts(vec![c], vec![0], vec![]));
     }
@@ -100,4 +105,99 @@ fn empty_library_is_explicit_and_turns_are_bounded() {
         assert!(trial.next_turn(&mut rng).unwrap().decked);
     }
     assert!(trial.next_turn(&mut rng).is_err());
+}
+
+#[test]
+fn invalid_conditional_sources_and_equip_modifiers_are_rejected() {
+    let ability = ManaAbility {
+        source: Source::new(&[Color::White]).unwrap(),
+        restriction: Restriction::Any,
+        condition: Condition::HasBasicType(0),
+    };
+    let mut c = filler(1);
+    c.kind = Kind::Spell(SpellSpec {
+        permanent: true,
+        mana_ability: Some(ability.clone()),
+        ..Default::default()
+    });
+    assert!(!accepts(vec![c], vec![0], vec![]));
+    let mut c = filler(1);
+    c.tags.colors = 32;
+    assert!(!accepts(vec![c], vec![0], vec![]));
+    for s in [
+        SpellSpec {
+            worthy_only: true,
+            ..Default::default()
+        },
+        SpellSpec {
+            equip_reduction_per_color: true,
+            ..Default::default()
+        },
+        SpellSpec {
+            story_free_equip: true,
+            ..Default::default()
+        },
+        SpellSpec {
+            target_equip_reduction: 2,
+            ..Default::default()
+        },
+    ] {
+        let mut c = filler(1);
+        c.kind = Kind::Spell(s);
+        assert!(!accepts(vec![c], vec![0], vec![]));
+    }
+    for conditional in [
+        vec![ability],
+        vec![
+            ManaAbility {
+                source: Source::new(&[Color::White]).unwrap(),
+                restriction: Restriction::Any,
+                condition: Condition::Always
+            };
+            9
+        ],
+    ] {
+        let mut c = filler(1);
+        c.kind = Kind::Land(LandSpec {
+            source: Source::new(&[Color::White]).unwrap(),
+            enters: Enters::Untapped,
+            restriction: Restriction::Any,
+            basic_types: 0,
+            conditional,
+        });
+        assert!(!accepts(vec![c], vec![0], vec![]));
+    }
+}
+
+#[test]
+fn search_and_adventure_events_must_have_consistent_timing() {
+    let search = TutorSpec {
+        scope: SearchScope::Top(0),
+        types: SearchTypes::Equipment,
+        timing: TutorTiming::SpellResolves,
+        destination: Destination::Hand,
+        max_mana_value: None,
+    };
+    let mut c = filler(1);
+    c.kind = Kind::Spell(SpellSpec {
+        tutor: Some(search.clone()),
+        ..Default::default()
+    });
+    assert!(!accepts(vec![c], vec![0], vec![]));
+    let mut c = filler(1);
+    c.adventure = Some(Adventure {
+        cost: ManaCost::default(),
+        tutor: search,
+    });
+    assert!(!accepts(vec![c], vec![0], vec![]));
+    let mut c = filler(1);
+    c.kind = Kind::Spell(SpellSpec {
+        entry_draw: Some(EntryDraw {
+            allow_self: true,
+            once_per_turn: false,
+            discard: DiscardPolicy::None,
+        }),
+        ..Default::default()
+    });
+    assert!(!accepts(vec![c], vec![0], vec![]));
 }

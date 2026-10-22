@@ -13,6 +13,8 @@ fn scenario() -> Scenario {
             printed_mana_value: 0,
             legendary: false,
             keep_priority: 0,
+            tags: Default::default(),
+            adventure: None,
             kind: if i < 4 {
                 Kind::Spell(SpellSpec {
                     permanent: true,
@@ -177,4 +179,44 @@ fn more_legendary_copies_do_not_become_two_equipment_permanents() {
     let have_one = hypergeometric(60, 4, 7, 1, 4).unwrap();
     assert!((first.mean_equipment - have_one).abs() < 0.015);
     assert!((first.mean_legendary_bricks - (7.0 * 4.0 / 60.0 - have_one)).abs() < 0.015);
+}
+
+#[test]
+fn reports_include_triggered_draws_creatures_and_story_sample_counts() {
+    let mut s = scenario();
+    let mut cards = s.deck[..8].to_vec();
+    for c in &mut cards[..4] {
+        c.legendary = true;
+        c.keep_priority = 10;
+        c.tags.dwarf = true;
+        c.kind = Kind::Spell(SpellSpec {
+            permanent: true,
+            creature: true,
+            entry_draw: Some(EntryDraw {
+                allow_self: false,
+                once_per_turn: true,
+                discard: DiscardPolicy::None,
+            }),
+            ..Default::default()
+        });
+    }
+    for c in &mut cards[4..] {
+        c.kind = Kind::Spell(SpellSpec {
+            permanent: true,
+            artifact: true,
+            equipment: true,
+            equip_cost: Some(ManaCost::default()),
+            ..Default::default()
+        });
+    }
+    s.deck = Arc::from(cards);
+    s.turns = 1;
+    let mut runner = BattlefieldRunner::new(s, 20, 15).unwrap();
+    runner.advance(20).unwrap();
+    let report = runner.report().unwrap();
+    let first = &report.turns[0];
+    assert_eq!(first.mean_creatures, 1.0);
+    assert_eq!(first.mean_cards_drawn, 1.0);
+    assert_eq!(first.mean_cards_discarded, 0.0);
+    assert_eq!(first.story_samples, 20);
 }

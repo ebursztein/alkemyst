@@ -35,3 +35,11 @@ test("maintained executable Rust files cannot disappear from coverage", () => {
     /missing from coverage/,
   );
 });
+
+test("maintained landlord math has its own 90% floor", () => {
+  const adopted = {
+    filename: "/repo/src/landlord/src/mana.rs",
+    summary: { lines: { covered: 89, count: 100 } },
+  };
+  assert.match(checkRustCoverage([file("db", 1000, 1000), adopted]).join("\n"), /Landlord/);
+});

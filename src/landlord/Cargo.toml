@@ -1,0 +1,15 @@
+[package]
+name = "landlord"
+version.workspace = true
+edition.workspace = true
+license = "MIT"
+authors = ["Justin Shrake", "Elie Bursztein"]
+description = "Maintained native MTG probability and mana simulation engine"
+
+[lints]
+workspace = true
+
+[dependencies]
+rand_core = "=0.10.1"
+rand_pcg = "=0.10.2"
+thiserror = "=2.0.21"

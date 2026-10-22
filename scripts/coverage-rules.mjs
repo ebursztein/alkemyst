@@ -22,6 +22,7 @@ export function maintainedRustSources(root, exemptions) {
 export function checkRustCoverage(files, expected = []) {
   const groups = [
     ["Overall", 0.85, () => true],
+    ["Landlord", 0.9, (path) => /\/src\/landlord\/src\//.test(path)],
     ["SQL engine", 0.9, (path) => /\/src\/core\/src\/(db|statements)\//.test(path)],
     ["Domain", 0.9, (path) => /\/src\/core\/src\/(domain|analysis|practice)\//.test(path)],
   ];

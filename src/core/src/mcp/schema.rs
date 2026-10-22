@@ -5,6 +5,7 @@ use utoipa::OpenApi;
 
 // Adding a REST endpoint never grants an agent a new capability implicitly.
 pub const ALLOWLIST: &[&str] = &[
+    "deckVersionsCompare",
     "simulationsCreate",
     "simulationsList",
     "simulationGet",

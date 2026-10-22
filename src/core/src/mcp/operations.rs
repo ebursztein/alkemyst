@@ -11,6 +11,12 @@ use serde_json::{Value, json};
 
 pub async fn invoke(app: &Application, name: &str, args: Value) -> Result<Value, ApiError> {
     match name {
+        "deckVersionsCompare" => encode(
+            app.analysis
+                .compare(&string(&args, "id")?, &string(&args, "candidate_id")?)
+                .await?
+                .ok_or_else(ApiError::missing)?,
+        ),
         "simulationsCreate" => {
             let c: crate::api::CreateSimulationCommand = decode(args)?;
             encode(

@@ -189,6 +189,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/deck-versions/{id}/compare/{candidate_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Compare immutable versions using one current catalog snapshot. Deltas normalize
+         *     printings to Oracle identities and retain unresolved references and zones.
+         *     The printed nonland curve is independent of observed outcomes and simulation.
+         */
+        get: operations["deckVersionsCompare"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/decks": {
         parameters: {
             query?: never;
@@ -548,6 +569,18 @@ export interface components {
              */
             unknown_results: number;
         };
+        CardDelta: {
+            /** Format: int32 */
+            base_quantity: number;
+            /** Format: int32 */
+            candidate_quantity: number;
+            /** Format: int32 */
+            delta: number;
+            /** @description Oracle identity when resolved; original reference otherwise. */
+            identity: string;
+            name?: string | null;
+            zone: components["schemas"]["Zone"];
+        };
         CardPage: {
             items: components["schemas"]["CardSummary"][];
             next_cursor?: string | null;
@@ -600,6 +633,20 @@ export interface components {
             /** Format: int32 */
             population: number;
         };
+        ComparisonSide: {
+            deck_id: string;
+            format: string;
+            id: string;
+            /** Format: int32 */
+            main: number;
+            name: string;
+            /** Format: int32 */
+            ordinal: number;
+            /** Format: int32 */
+            sideboard: number;
+            /** Format: int32 */
+            unresolved_main: number;
+        };
         Counts: {
             /** Format: int32 */
             creatures: number;
@@ -643,12 +690,35 @@ export interface components {
             /** Format: int32 */
             quantity: number;
         };
+        CurveDelta: {
+            /** Format: int32 */
+            base_quantity: number;
+            /** Format: int32 */
+            candidate_quantity: number;
+            /** Format: int32 */
+            delta: number;
+            /**
+             * Format: double
+             * @description Printed mana value; null retains unresolved main-deck cards.
+             */
+            mana_value?: number | null;
+        };
         DeckCard: {
             /** Format: int32 */
             quantity: number;
             /** @description oracle:<id>, scryfall:<printing-id>, or arena:<numeric-id>. */
             reference: string;
             zone: components["schemas"]["Zone"];
+        };
+        DeckComparison: {
+            base: components["schemas"]["ComparisonSide"];
+            candidate: components["schemas"]["ComparisonSide"];
+            /** @description Changed quantities by identity and zone. Printing-only changes cancel out. */
+            cards: components["schemas"]["CardDelta"][];
+            catalog_snapshot?: string | null;
+            catalog_updated_at?: string | null;
+            /** @description Printed front-face nonland curve, not effective casting or equip costs. */
+            curve: components["schemas"]["CurveDelta"][];
         };
         DeckPage: {
             items: components["schemas"]["DeckSummary"][];
@@ -1544,6 +1614,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ArenaExport"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deckVersionsCompare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                candidate_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeckComparison"];
                 };
             };
             "4XX": {

@@ -560,6 +560,65 @@
         }
       }
     },
+    "/v1/deck-versions/{id}/compare/{candidate_id}": {
+      "get": {
+        "tags": [
+          "analysis"
+        ],
+        "summary": "Compare immutable versions using one current catalog snapshot. Deltas normalize\nprintings to Oracle identities and retain unresolved references and zones.\nThe printed nonland curve is independent of observed outcomes and simulation.",
+        "operationId": "deckVersionsCompare",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeckComparison"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/decks": {
       "get": {
         "tags": [
@@ -1907,6 +1966,45 @@
           }
         }
       },
+      "CardDelta": {
+        "type": "object",
+        "required": [
+          "identity",
+          "zone",
+          "base_quantity",
+          "candidate_quantity",
+          "delta"
+        ],
+        "properties": {
+          "base_quantity": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "candidate_quantity": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "delta": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "identity": {
+            "type": "string",
+            "description": "Oracle identity when resolved; original reference otherwise."
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "zone": {
+            "$ref": "#/components/schemas/Zone"
+          }
+        }
+      },
       "CardPage": {
         "type": "object",
         "required": [
@@ -2128,6 +2226,53 @@
         },
         "additionalProperties": false
       },
+      "ComparisonSide": {
+        "type": "object",
+        "required": [
+          "id",
+          "deck_id",
+          "ordinal",
+          "name",
+          "format",
+          "main",
+          "sideboard",
+          "unresolved_main"
+        ],
+        "properties": {
+          "deck_id": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "main": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "name": {
+            "type": "string"
+          },
+          "ordinal": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "sideboard": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "unresolved_main": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
       "Counts": {
         "type": "object",
         "required": [
@@ -2283,6 +2428,38 @@
           }
         }
       },
+      "CurveDelta": {
+        "type": "object",
+        "required": [
+          "base_quantity",
+          "candidate_quantity",
+          "delta"
+        ],
+        "properties": {
+          "base_quantity": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "candidate_quantity": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "delta": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mana_value": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Printed mana value; null retains unresolved main-deck cards."
+          }
+        }
+      },
       "DeckCard": {
         "type": "object",
         "required": [
@@ -2302,6 +2479,49 @@
           },
           "zone": {
             "$ref": "#/components/schemas/Zone"
+          }
+        }
+      },
+      "DeckComparison": {
+        "type": "object",
+        "required": [
+          "base",
+          "candidate",
+          "cards",
+          "curve"
+        ],
+        "properties": {
+          "base": {
+            "$ref": "#/components/schemas/ComparisonSide"
+          },
+          "candidate": {
+            "$ref": "#/components/schemas/ComparisonSide"
+          },
+          "cards": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CardDelta"
+            },
+            "description": "Changed quantities by identity and zone. Printing-only changes cancel out."
+          },
+          "catalog_snapshot": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "catalog_updated_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "curve": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CurveDelta"
+            },
+            "description": "Printed front-face nonland curve, not effective casting or equip costs."
           }
         }
       },

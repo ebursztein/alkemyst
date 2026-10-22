@@ -206,3 +206,14 @@ inputs and cancellation; exact draw/joint probability endpoints are separate.
 Seeds are hexadecimal strings to preserve every bit in JavaScript. See
 [job semantics](src/core/src/analysis/jobs/README.md) for scope, replay versions,
 cancellation, recovery and sampling intervals.
+
+## Deck version comparison
+
+`GET /v1/deck-versions/{id}/compare/{candidate_id}` (`deckVersionsCompare` in MCP)
+compares two immutable versions against the same current catalog snapshot. SQL
+normalizes resolved printings to Oracle identities, keeps zones separate and
+returns quantity changes and printed nonland curve deltas. Unresolved references
+remain explicit, including null mana-value bins. Printing-only changes cancel
+out when both references resolve to the same card. These deltas contain no
+inferred win rates or simulation results; compare those through their separately
+labeled operations and sample counts.

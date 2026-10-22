@@ -19,6 +19,47 @@
     }
   ],
   "paths": {
+    "/v1/capture": {
+      "get": {
+        "tags": [
+          "history"
+        ],
+        "summary": "Read durable capture counts. Unknown results include unfinished and ambiguous games.",
+        "operationId": "captureStatusGet",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureStatus"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/cards/resolve-arena": {
       "post": {
         "tags": [
@@ -671,6 +712,301 @@
         }
       }
     },
+    "/v1/games": {
+      "get": {
+        "tags": [
+          "history"
+        ],
+        "summary": "List captured games with immutable deck attribution, samples and missing-data flags.",
+        "operationId": "gamesList",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 40,
+              "maximum": 100,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deck_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "match_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/MatchMode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GamePage"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/games/{id}": {
+      "get": {
+        "tags": [
+          "history"
+        ],
+        "summary": "Read one game; known outcomes do not imply a complete timeline.",
+        "operationId": "gameGet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameSummary"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/games/{id}/events": {
+      "get": {
+        "tags": [
+          "history"
+        ],
+        "summary": "Read a stable, bounded event page. Keep returned cursors opaque; later captures do not alter this pagination snapshot.",
+        "operationId": "gameTimeline",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "turn_number",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 40,
+              "maximum": 100,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimelinePage"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/games/{id}/turns": {
+      "get": {
+        "tags": [
+          "history"
+        ],
+        "summary": "Group observed events into turns without inferring absent actions. Pagination freezes capture evidence; unassigned events are counted separately.",
+        "operationId": "gameTurns",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 40,
+              "maximum": 100,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnPage"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/health": {
       "get": {
         "tags": [
@@ -693,6 +1029,151 @@
         "security": [
           {}
         ]
+      }
+    },
+    "/v1/matches": {
+      "get": {
+        "tags": [
+          "history"
+        ],
+        "summary": "List matches separately from their games. Deck/version filters select matches containing at least one matching game.",
+        "operationId": "matchesList",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 40,
+              "maximum": 100,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deck_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "match_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/MatchMode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchPage"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/matches/{id}": {
+      "get": {
+        "tags": [
+          "history"
+        ],
+        "summary": "Read a match and its games. Match outcomes require an explicit match-scoped result.",
+        "operationId": "matchGet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchSummary"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/v1/notes": {
@@ -813,6 +1294,81 @@
           }
         }
       }
+    },
+    "/v1/statistics": {
+      "get": {
+        "tags": [
+          "history"
+        ],
+        "summary": "Observe game-level performance with explicit denominators. Unknowns are excluded from decisive win rate; recorded land counters cover only sampled local turns.",
+        "operationId": "statisticsGet",
+        "parameters": [
+          {
+            "name": "deck_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/MatchMode"
+            }
+          },
+          {
+            "name": "complete_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Statistics"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -879,6 +1435,50 @@
           },
           "version": {
             "type": "string"
+          }
+        }
+      },
+      "CaptureStatus": {
+        "type": "object",
+        "required": [
+          "sources",
+          "matches",
+          "games",
+          "events",
+          "deck_versions",
+          "unknown_results"
+        ],
+        "properties": {
+          "deck_versions": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "events": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "games": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "matches": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "sources": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "unknown_results": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Games without one unambiguous observed local outcome, including unfinished games.",
+            "minimum": 0
           }
         }
       },
@@ -1259,6 +1859,177 @@
           "internal"
         ]
       },
+      "GamePage": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GameSummary"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "GameSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "match_id",
+          "number",
+          "first_ordinal",
+          "events",
+          "mode",
+          "capture_complete",
+          "missing_data",
+          "turns_observed",
+          "mulligan_actions_observed",
+          "land_turn_samples"
+        ],
+        "properties": {
+          "capture_complete": {
+            "type": "boolean"
+          },
+          "deck_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "deck_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "deck_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "events": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "first_ordinal": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "format": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "land_drops_observed": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Recorded land counters on observed local turns; not an inferred full-game total.",
+            "minimum": 0
+          },
+          "land_turn_samples": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "last_turn": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 0
+          },
+          "local_seat": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "local_time": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Zone-less Arena log clock; not silently interpreted as UTC."
+          },
+          "match_id": {
+            "type": "string"
+          },
+          "match_instant_utc": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Explicit match clock evidence; not a reconstructed game-start timestamp."
+          },
+          "missing_data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MissingData"
+            }
+          },
+          "mode": {
+            "$ref": "#/components/schemas/MatchMode"
+          },
+          "mulligan_actions_observed": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "mulligans": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 0
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "on_play": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "outcome": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ObservedOutcome"
+              }
+            ]
+          },
+          "turns_observed": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
       "ImportDeck": {
         "type": "object",
         "required": [
@@ -1293,6 +2064,96 @@
           }
         },
         "additionalProperties": false
+      },
+      "MatchMode": {
+        "type": "string",
+        "enum": [
+          "bo1",
+          "bo3",
+          "unknown"
+        ]
+      },
+      "MatchPage": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MatchSummary"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "MatchSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "first_ordinal",
+          "mode",
+          "completed",
+          "game_count",
+          "games"
+        ],
+        "properties": {
+          "completed": {
+            "type": "boolean"
+          },
+          "first_ordinal": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "game_count": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "games": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GameSummary"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/MatchMode"
+          },
+          "outcome": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ObservedOutcome"
+              }
+            ]
+          }
+        }
+      },
+      "MissingData": {
+        "type": "string",
+        "enum": [
+          "initial_state",
+          "terminal_result",
+          "state_gap",
+          "unverifiable_chain",
+          "truncated",
+          "connection",
+          "deck_version",
+          "local_seat",
+          "conflicting_result",
+          "outcome"
+        ]
       },
       "NewNote": {
         "type": "object",
@@ -1401,6 +2262,14 @@
           }
         }
       },
+      "ObservedOutcome": {
+        "type": "string",
+        "enum": [
+          "won",
+          "lost",
+          "draw"
+        ]
+      },
       "Origin": {
         "type": "string",
         "enum": [
@@ -1461,6 +2330,47 @@
         },
         "additionalProperties": false
       },
+      "SampleBreakdown": {
+        "type": "object",
+        "required": [
+          "mode",
+          "games",
+          "known_results",
+          "wins",
+          "losses",
+          "draws"
+        ],
+        "properties": {
+          "draws": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "games": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "known_results": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "losses": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "mode": {
+            "$ref": "#/components/schemas/MatchMode"
+          },
+          "wins": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
       "Search": {
         "type": "object",
         "properties": {
@@ -1518,6 +2428,359 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "Statistics": {
+        "type": "object",
+        "required": [
+          "games",
+          "matches",
+          "known_results",
+          "wins",
+          "losses",
+          "draws",
+          "unknown_results",
+          "partial_games",
+          "decisive_games",
+          "on_play_samples",
+          "on_draw_samples",
+          "unknown_play_draw",
+          "mulligan_samples",
+          "recorded_land_drops",
+          "land_turn_samples",
+          "by_mode"
+        ],
+        "properties": {
+          "by_mode": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SampleBreakdown"
+            }
+          },
+          "decisive_games": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "decisive_win_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Wins / (wins + losses), excluding draws and unknown results."
+          },
+          "draws": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "games": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "known_results": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "land_turn_samples": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "losses": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "matches": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "mulligan_samples": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "observed_mulligans_average": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "on_draw_samples": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "on_play_samples": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "partial_games": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "recorded_land_drops": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "unknown_play_draw": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "unknown_results": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "wins": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "TimelineEvent": {
+        "type": "object",
+        "required": [
+          "ordinal",
+          "id",
+          "kind",
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "instant_utc": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "local_seat": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "local_time": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ordinal": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "phase": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "step": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "turn_number": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "TimelinePage": {
+        "type": "object",
+        "required": [
+          "game_id",
+          "items",
+          "through_ordinal"
+        ],
+        "properties": {
+          "game_id": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TimelineEvent"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "through_ordinal": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "TurnPage": {
+        "type": "object",
+        "required": [
+          "game_id",
+          "through_ordinal",
+          "unassigned_events",
+          "items"
+        ],
+        "properties": {
+          "game_id": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TurnSummary"
+            }
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "through_ordinal": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "unassigned_events": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "TurnSummary": {
+        "type": "object",
+        "required": [
+          "number",
+          "events",
+          "states",
+          "actions",
+          "first_ordinal",
+          "last_ordinal",
+          "phase_samples",
+          "phases",
+          "land_counter_samples"
+        ],
+        "properties": {
+          "actions": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "active_player": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "events": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "first_ordinal": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "is_local_turn": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "land_counter_samples": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "land_drops_observed": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": 0
+          },
+          "last_ordinal": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "local_life_total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "mulligans": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 0
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "phase_samples": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "phases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "states": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
           }
         }
       },

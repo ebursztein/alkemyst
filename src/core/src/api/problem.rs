@@ -137,3 +137,16 @@ impl From<crate::catalog::Error> for ApiError {
         }
     }
 }
+
+impl From<crate::ingest::Error> for ApiError {
+    fn from(error: crate::ingest::Error) -> Self {
+        match error {
+            crate::ingest::Error::Database(error) => error.into(),
+            _ => Self::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ErrorCode::Internal,
+                "Capture status unavailable",
+            ),
+        }
+    }
+}

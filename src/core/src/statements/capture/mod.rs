@@ -29,7 +29,11 @@ pub const GAMES: Mutation = Mutation {
 };
 pub const EVENTS: Mutation = Mutation {
     sql: include_str!("events.sql"),
-    writes: &["capture_events"],
+    writes: &[
+        "capture_events",
+        "game_capture_order",
+        "match_capture_order",
+    ],
 };
 pub const STATUS: Statement = Statement {
     name: "capture.status",

@@ -3,6 +3,7 @@ mod cards;
 mod decks;
 pub(crate) mod discovery;
 mod extract;
+mod history;
 mod models;
 mod notes;
 mod openapi;
@@ -43,6 +44,14 @@ pub(super) fn router_with_mcp(
     let state = AppState { app, auth };
     let protected = Router::new()
         .nest_service("/mcp", mcp)
+        .route("/v1/games", get(history::games))
+        .route("/v1/games/{id}", get(history::game))
+        .route("/v1/games/{id}/events", get(history::timeline))
+        .route("/v1/games/{id}/turns", get(history::turns))
+        .route("/v1/matches", get(history::matches))
+        .route("/v1/matches/{id}", get(history::match_detail))
+        .route("/v1/statistics", get(history::statistics))
+        .route("/v1/capture", get(history::capture))
         .route("/v1/discovery", get(discovery::get))
         .route("/v1/decks", get(decks::list).post(decks::create))
         .route("/v1/deck-versions", post(decks::create_version))

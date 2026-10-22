@@ -6,4 +6,5 @@ export interface LocalService {
 export function startLocalService(options?: {
   database?: string;
   coverage?: boolean;
+  history?: boolean;
 }): Promise<LocalService>;

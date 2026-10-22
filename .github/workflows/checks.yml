@@ -67,7 +67,7 @@ jobs:
         id: native-compile
       - run: cargo test --workspace --locked
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
-      - run: pnpm --filter @alkemyst/desktop tauri build --debug --no-bundle --ci -- --locked
+      - run: pnpm native:build
       - run: pnpm --filter @alkemyst/desktop native:smoke
       - name: Diagnose Windows loader imports
         if: failure() && runner.os == 'Windows' && steps.native-compile.outcome == 'success'

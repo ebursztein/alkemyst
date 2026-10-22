@@ -34,7 +34,17 @@ pub(crate) fn discover() -> Discovery {
         name: "Alkemyst",
         version: env!("CARGO_PKG_VERSION"),
         local_only: true,
-        capabilities: vec!["cards", "decks", "versions", "notes"],
+        capabilities: vec![
+            "cards",
+            "decks",
+            "versions",
+            "notes",
+            "games",
+            "matches",
+            "timelines",
+            "statistics",
+            "capture",
+        ],
         operations,
     }
 }

@@ -25,60 +25,48 @@ async fn transport_origin_does_not_change_logical_request_identity() {
 
 #[tokio::test]
 async fn existing_receipts_migrate_without_losing_retry_identity() {
-    use alkemyst_core::db::{Mutation, Write};
     use serde_json::json;
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("legacy.sqlite3");
-    let db = Engine::open(&path, 4096).unwrap();
-    let decks = Decks::new(db.clone());
     let input = CreateDeck {
         name: "Boros".into(),
         format: "standard".into(),
         cards: vec![],
     };
-    let original = decks
-        .create("legacy-key", input.clone(), Origin::User)
-        .await
-        .unwrap();
-    db.write(vec![
-        Write {
-            statement: Mutation {
-                sql: "UPDATE mutation_receipts SET body=json_set(body, '$.origin', 'user') WHERE key=?1",
-                writes: &["mutation_receipts"],
-            },
-            params: vec![json!("legacy-key")],
-            expected_rows: Some(1),
-        },
-        Write {
-            statement: Mutation { sql: "PRAGMA user_version=4", writes: &[] },
-            params: vec![], expected_rows: None,
-        },
-    ]).await.unwrap();
-    // Reconstruct the actual pre-capture schema, rather than only changing its version number.
-    db.write(
-        [
-            "DROP TABLE capture_events",
-            "DROP TABLE games",
-            "DROP TABLE matches",
-            "DROP TABLE arena_decks",
-            "DROP TABLE capture_sources",
-        ]
-        .into_iter()
-        .map(|sql| Write {
-            statement: Mutation { sql, writes: &[] },
-            params: vec![],
-            expected_rows: None,
-        })
-        .collect(),
-    )
-    .await
-    .unwrap();
-    db.close().await.unwrap();
+    {
+        // Build a real v4 fixture so newer migrations cannot leak into its schema.
+        let legacy = rusqlite::Connection::open(&path).unwrap();
+        for sql in [
+            include_str!("../migrations/001_initial.sql"),
+            include_str!("../migrations/002_catalog.sql"),
+            include_str!("../migrations/003_arena_aliases.sql"),
+            include_str!("../migrations/004_decks.sql"),
+        ] {
+            legacy.execute_batch(sql).unwrap();
+        }
+        legacy
+            .execute(
+                "INSERT INTO decks VALUES ('legacy-deck','Boros','standard',123)",
+                [],
+            )
+            .unwrap();
+        legacy.execute("INSERT INTO deck_versions(id,deck_id,ordinal,name,format,origin,created_at) VALUES ('legacy-version','legacy-deck',1,'Boros','standard','user',123)",[]).unwrap();
+        legacy
+            .execute(
+                "UPDATE deck_versions SET sealed=1 WHERE id='legacy-version'",
+                [],
+            )
+            .unwrap();
+        legacy.execute("INSERT INTO mutation_receipts VALUES ('legacy-key','decks.create',?1,'legacy-version')",[json!({"input":input,"origin":"user"}).to_string()]).unwrap();
+    }
     let reopened = Engine::open(&path, 4096).unwrap();
     let retry = Decks::new(reopened.clone())
         .create("legacy-key", input, Origin::Agent)
         .await
         .unwrap();
-    assert_eq!(original, retry);
+    assert_eq!(retry.id, "legacy-version");
+    assert_eq!(retry.deck_id, "legacy-deck");
+    assert_eq!(retry.origin, Origin::User);
+    assert_eq!(retry.created_at, 123);
     reopened.close().await.unwrap();
 }

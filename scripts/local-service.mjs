@@ -9,7 +9,7 @@ import { gzipSync } from "node:zlib";
 const execute = promisify(execFile);
 const token = "test-only-local-api-credential-with-at-least-32-characters";
 
-export async function startLocalService({ database, coverage = false } = {}) {
+export async function startLocalService({ database, coverage = false, history = false } = {}) {
   const directory = database ? undefined : await mkdtemp(join(tmpdir(), "alkemyst-sdk-"));
   const path = database ?? join(directory, "catalog.sqlite3");
   let child;
@@ -32,6 +32,23 @@ export async function startLocalService({ database, coverage = false } = {}) {
           archive,
           "https://data.scryfall.io/default-cards/fixture.jsonl.gz",
           "2026-10-21T21:00:00Z",
+        ],
+        { timeout: 180_000 },
+      );
+    }
+    if (history) {
+      await execute(
+        "cargo",
+        [
+          "run",
+          "--quiet",
+          "--locked",
+          "--example",
+          "capture",
+          "--",
+          "import",
+          path,
+          "src/core/tests/fixtures/arena-game.txt",
         ],
         { timeout: 180_000 },
       );

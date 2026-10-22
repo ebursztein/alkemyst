@@ -17,3 +17,10 @@ pub const DECKS: &str = include_str!("../../migrations/004_decks.sql");
 pub const RECEIPT_ORIGINS: &str = include_str!("../../migrations/005_receipt_origins.sql");
 
 pub const CAPTURE: &str = include_str!("../../migrations/006_capture.sql");
+
+pub const HISTORY_ORDER: &str = include_str!("../../migrations/007_history_order.sql");
+pub const HISTORY_FACTS: &str = include_str!("../../migrations/007_history_facts.sql");
+pub const HISTORY_SUMMARIES: &str = include_str!("../../migrations/007_history_summaries.sql");
+
+pub const HISTORY_MATCH_FACTS: &str = include_str!("../../migrations/007_history_match_facts.sql");
+pub const HISTORY_MATCHES: &str = include_str!("../../migrations/007_history_matches.sql");

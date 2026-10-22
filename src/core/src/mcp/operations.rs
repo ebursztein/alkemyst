@@ -11,6 +11,40 @@ use serde_json::{Value, json};
 
 pub async fn invoke(app: &Application, name: &str, args: Value) -> Result<Value, ApiError> {
     match name {
+        "gamesList" => encode(app.history.games(decode(args)?).await?),
+        "gameGet" => encode(
+            app.history
+                .game(&string(&args, "id")?)
+                .await?
+                .ok_or_else(ApiError::missing)?,
+        ),
+        "gameTimeline" => {
+            let id = string(&args, "id")?;
+            encode(
+                app.history
+                    .timeline(&id, decode(args)?)
+                    .await?
+                    .ok_or_else(ApiError::missing)?,
+            )
+        }
+        "gameTurns" => {
+            let id = string(&args, "id")?;
+            encode(
+                app.history
+                    .turns(&id, decode(args)?)
+                    .await?
+                    .ok_or_else(ApiError::missing)?,
+            )
+        }
+        "matchesList" => encode(app.history.matches(decode(args)?).await?),
+        "matchGet" => encode(
+            app.history
+                .match_summary(&string(&args, "id")?)
+                .await?
+                .ok_or_else(ApiError::missing)?,
+        ),
+        "statisticsGet" => encode(app.history.statistics(decode(args)?).await?),
+        "captureStatusGet" => encode(app.ingest.status().await?),
         "systemDiscovery" => encode(crate::api::discovery::discover()),
         "cardsSearch" => encode(app.catalog.search(decode(args)?).await?),
         "cardsGet" => encode(

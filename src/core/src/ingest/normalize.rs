@@ -88,6 +88,38 @@ pub(super) fn event(event: &GameEvent, context: &mut Context, source: &str) -> O
         .zip(context.game_number)
         .map(|(id, number)| format!("{id}:{number}"));
     let mut payload = privacy::gameplay(p);
+    if kind == "connection" {
+        let interrupted = match event {
+            GameEvent::MatchConnectionState(_) => match (p["old"].as_str(), p["new"].as_str()) {
+                (Some("MatchCompleted" | "None"), Some("Disconnected")) => Some(false),
+                (_, Some("Disconnected")) => Some(true),
+                (
+                    _,
+                    Some(
+                        "Playing"
+                        | "MatchCompleted"
+                        | "ConnectedToMatchDoor"
+                        | "ConnectedToMatchDoor_ConnectingToGRE"
+                        | "ConnectedToMatchDoor_ConnectedToGRE_Waiting",
+                    ),
+                ) => Some(false),
+                _ => None,
+            },
+            GameEvent::TcpConnectionClose(_)
+            | GameEvent::WebSocketClosed(_)
+            | GameEvent::ConnectionError(_) => Some(true),
+            _ => None,
+        };
+        payload["capture_interrupted"] = json!(interrupted);
+    }
+    if matches!(event, GameEvent::MatchState(_)) {
+        // Explicit known queues only. Unknown/custom queue labels are not retained.
+        payload["best_of"] = json!(match p["event_id"].as_str() {
+            Some("Ladder") => Some(1),
+            Some("Traditional_Ladder") => Some(3),
+            _ => None,
+        });
+    }
     if let Some(wire) = &wire {
         if wire.body["players"].is_array() {
             payload["players"] = privacy::gameplay(&wire.body["players"]);

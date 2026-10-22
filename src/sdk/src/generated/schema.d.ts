@@ -1,4 +1,21 @@
 export interface paths {
+    "/v1/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read durable capture counts. Unknown results include unfinished and ambiguous games. */
+        get: operations["captureStatusGet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/cards/resolve-arena": {
         parameters: {
             query?: never;
@@ -204,6 +221,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/games": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List captured games with immutable deck attribution, samples and missing-data flags. */
+        get: operations["gamesList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/games/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read one game; known outcomes do not imply a complete timeline. */
+        get: operations["gameGet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/games/{id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a stable, bounded event page. Keep returned cursors opaque; later captures do not alter this pagination snapshot. */
+        get: operations["gameTimeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/games/{id}/turns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Group observed events into turns without inferring absent actions. Pagination freezes capture evidence; unassigned events are counted separately. */
+        get: operations["gameTurns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/health": {
         parameters: {
             query?: never;
@@ -213,6 +298,40 @@ export interface paths {
         };
         /** Read the local service build identity. */
         get: operations["healthGet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/matches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List matches separately from their games. Deck/version filters select matches containing at least one matching game. */
+        get: operations["matchesList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/matches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a match and its games. Match outcomes require an explicit match-scoped result. */
+        get: operations["matchGet"];
         put?: never;
         post?: never;
         delete?: never;
@@ -239,6 +358,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/statistics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Observe game-level performance with explicit denominators. Unknowns are excluded from decisive win rate; recorded land counters cover only sampled local turns. */
+        get: operations["statisticsGet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -259,6 +395,23 @@ export interface components {
         BuildInfo: {
             name: string;
             version: string;
+        };
+        CaptureStatus: {
+            /** Format: int64 */
+            deck_versions: number;
+            /** Format: int64 */
+            events: number;
+            /** Format: int64 */
+            games: number;
+            /** Format: int64 */
+            matches: number;
+            /** Format: int64 */
+            sources: number;
+            /**
+             * Format: int64
+             * @description Games without one unambiguous observed local outcome, including unfinished games.
+             */
+            unknown_results: number;
         };
         CardPage: {
             items: components["schemas"]["CardSummary"][];
@@ -351,6 +504,50 @@ export interface components {
         };
         /** @enum {string} */
         ErrorCode: "unauthorized" | "forbidden" | "invalid_request" | "not_found" | "conflict" | "unresolved_cards" | "busy" | "internal";
+        GamePage: {
+            items: components["schemas"]["GameSummary"][];
+            next_cursor?: string | null;
+        };
+        GameSummary: {
+            capture_complete: boolean;
+            deck_id?: string | null;
+            deck_name?: string | null;
+            deck_version?: string | null;
+            /** Format: int64 */
+            events: number;
+            /** Format: int64 */
+            first_ordinal: number;
+            format?: string | null;
+            id: string;
+            /**
+             * Format: int64
+             * @description Recorded land counters on observed local turns; not an inferred full-game total.
+             */
+            land_drops_observed?: number | null;
+            /** Format: int64 */
+            land_turn_samples: number;
+            /** Format: int32 */
+            last_turn?: number | null;
+            /** Format: int64 */
+            local_seat?: number | null;
+            /** @description Zone-less Arena log clock; not silently interpreted as UTC. */
+            local_time?: string | null;
+            match_id: string;
+            /** @description Explicit match clock evidence; not a reconstructed game-start timestamp. */
+            match_instant_utc?: string | null;
+            missing_data: components["schemas"]["MissingData"][];
+            mode: components["schemas"]["MatchMode"];
+            /** Format: int64 */
+            mulligan_actions_observed: number;
+            /** Format: int32 */
+            mulligans?: number | null;
+            /** Format: int32 */
+            number: number;
+            on_play?: boolean | null;
+            outcome?: null | components["schemas"]["ObservedOutcome"];
+            /** Format: int64 */
+            turns_observed: number;
+        };
         ImportDeck: {
             format: string;
             name: string;
@@ -360,6 +557,25 @@ export interface components {
             idempotency_key: string;
             input: components["schemas"]["ImportDeck"];
         };
+        /** @enum {string} */
+        MatchMode: "bo1" | "bo3" | "unknown";
+        MatchPage: {
+            items: components["schemas"]["MatchSummary"][];
+            next_cursor?: string | null;
+        };
+        MatchSummary: {
+            completed: boolean;
+            /** Format: int64 */
+            first_ordinal: number;
+            /** Format: int64 */
+            game_count: number;
+            games: components["schemas"]["GameSummary"][];
+            id: string;
+            mode: components["schemas"]["MatchMode"];
+            outcome?: null | components["schemas"]["ObservedOutcome"];
+        };
+        /** @enum {string} */
+        MissingData: "initial_state" | "terminal_result" | "state_gap" | "unverifiable_chain" | "truncated" | "connection" | "deck_version" | "local_seat" | "conflicting_result" | "outcome";
         NewNote: {
             body: string;
             deck_id: string;
@@ -386,6 +602,8 @@ export interface components {
             next_cursor?: string | null;
         };
         /** @enum {string} */
+        ObservedOutcome: "won" | "lost" | "draw";
+        /** @enum {string} */
         Origin: "user" | "agent" | "arena" | "import";
         Problem: {
             code: components["schemas"]["ErrorCode"];
@@ -398,6 +616,19 @@ export interface components {
         };
         References: {
             references: string[];
+        };
+        SampleBreakdown: {
+            /** Format: int64 */
+            draws: number;
+            /** Format: int64 */
+            games: number;
+            /** Format: int64 */
+            known_results: number;
+            /** Format: int64 */
+            losses: number;
+            mode: components["schemas"]["MatchMode"];
+            /** Format: int64 */
+            wins: number;
         };
         Search: {
             arena_only?: boolean;
@@ -414,6 +645,109 @@ export interface components {
             text?: string;
             type_line?: string | null;
         };
+        Statistics: {
+            by_mode: components["schemas"]["SampleBreakdown"][];
+            /** Format: int64 */
+            decisive_games: number;
+            /**
+             * Format: double
+             * @description Wins / (wins + losses), excluding draws and unknown results.
+             */
+            decisive_win_rate?: number | null;
+            /** Format: int64 */
+            draws: number;
+            /** Format: int64 */
+            games: number;
+            /** Format: int64 */
+            known_results: number;
+            /** Format: int64 */
+            land_turn_samples: number;
+            /** Format: int64 */
+            losses: number;
+            /** Format: int64 */
+            matches: number;
+            /** Format: int64 */
+            mulligan_samples: number;
+            /** Format: double */
+            observed_mulligans_average?: number | null;
+            /** Format: int64 */
+            on_draw_samples: number;
+            /** Format: int64 */
+            on_play_samples: number;
+            /** Format: int64 */
+            partial_games: number;
+            /** Format: int64 */
+            recorded_land_drops: number;
+            /** Format: int64 */
+            unknown_play_draw: number;
+            /** Format: int64 */
+            unknown_results: number;
+            /** Format: int64 */
+            wins: number;
+        };
+        TimelineEvent: {
+            data: {
+                [key: string]: unknown;
+            };
+            id: string;
+            instant_utc?: string | null;
+            kind: string;
+            /** Format: int64 */
+            local_seat?: number | null;
+            local_time?: string | null;
+            /** Format: int64 */
+            ordinal: number;
+            phase?: string | null;
+            /** Format: int64 */
+            state_id?: number | null;
+            step?: string | null;
+            /** Format: int32 */
+            turn_number?: number | null;
+        };
+        TimelinePage: {
+            game_id: string;
+            items: components["schemas"]["TimelineEvent"][];
+            next_cursor?: string | null;
+            /** Format: int64 */
+            through_ordinal: number;
+        };
+        TurnPage: {
+            game_id: string;
+            items: components["schemas"]["TurnSummary"][];
+            next_cursor?: string | null;
+            /** Format: int64 */
+            through_ordinal: number;
+            /** Format: int64 */
+            unassigned_events: number;
+        };
+        TurnSummary: {
+            /** Format: int64 */
+            actions: number;
+            /** Format: int64 */
+            active_player?: number | null;
+            /** Format: int64 */
+            events: number;
+            /** Format: int64 */
+            first_ordinal: number;
+            is_local_turn?: boolean | null;
+            /** Format: int64 */
+            land_counter_samples: number;
+            /** Format: int64 */
+            land_drops_observed?: number | null;
+            /** Format: int64 */
+            last_ordinal: number;
+            /** Format: int64 */
+            local_life_total?: number | null;
+            /** Format: int32 */
+            mulligans?: number | null;
+            /** Format: int32 */
+            number: number;
+            /** Format: int64 */
+            phase_samples: number;
+            phases: string[];
+            /** Format: int64 */
+            states: number;
+        };
         /** @enum {string} */
         Zone: "main" | "sideboard" | "command" | "companion";
     };
@@ -425,6 +759,41 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    captureStatusGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaptureStatus"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     cardsResolveArena: {
         parameters: {
             query?: never;
@@ -915,6 +1284,166 @@ export interface operations {
             };
         };
     };
+    gamesList: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+                deck_id?: string;
+                version_id?: string;
+                match_id?: string;
+                mode?: components["schemas"]["MatchMode"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GamePage"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    gameGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GameSummary"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    gameTimeline: {
+        parameters: {
+            query?: {
+                turn_number?: number;
+                limit?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelinePage"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    gameTurns: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TurnPage"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     healthGet: {
         parameters: {
             query?: never;
@@ -931,6 +1460,85 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BuildInfo"];
+                };
+            };
+        };
+    };
+    matchesList: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string;
+                deck_id?: string;
+                version_id?: string;
+                match_id?: string;
+                mode?: components["schemas"]["MatchMode"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchPage"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    matchGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchSummary"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -993,6 +1601,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Note"];
+                };
+            };
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    statisticsGet: {
+        parameters: {
+            query?: {
+                deck_id?: string;
+                version_id?: string;
+                mode?: components["schemas"]["MatchMode"];
+                complete_only?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Statistics"];
                 };
             };
             "4XX": {

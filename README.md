@@ -76,8 +76,8 @@ The example prints its base URL and process ID, never the credential. Keep the
 credential out of URLs and logs. Ctrl-C stops the listener. Native bootstrap will
 supply connection details to the desktop; this example is a developer entry point.
 
-`@alkemyst/sdk` provides `createAlkemystClient({ baseUrl, token })` and
-`createAlkemystQueryClient({ baseUrl, token })`. Types are generated from Rust's
+`@alkemyst/sdk` provides `createAlkemystClient(baseUrl, token)` and
+`createAlkemystQueryClient(baseUrl, token)`. Types are generated from Rust's
 OpenAPI contract with `pnpm sdk:generate`; `pnpm sdk:check` rejects drift. Commands
 carry an `idempotency_key` and `input`; retrying the same logical command returns
 the original result, including when retried through another transport. Changed
@@ -146,3 +146,46 @@ Only normalized gameplay data is stored: account/session records, player names,
 chat, opaque raw envelopes and credentials are excluded. Source identifiers and
 external match/deck identifiers are hashed. Saved deck names remain local user
 data. Personal databases and raw logs must stay outside Git.
+
+## History API and interpretation
+
+The generated SDK and MCP expose the same SQL-backed operations:
+
+| REST resource                     | MCP operation             | Meaning                                                                              |
+| --------------------------------- | ------------------------- | ------------------------------------------------------------------------------------ |
+| `/v1/games`, `/v1/games/{id}`     | `gamesList`, `gameGet`    | Games, immutable deck versions, observed counters and capture flags                  |
+| `/v1/matches`, `/v1/matches/{id}` | `matchesList`, `matchGet` | Matches and their games; match-scoped outcomes stay distinct                         |
+| `/v1/games/{id}/events`           | `gameTimeline`            | Captured events; optional `turn_number` filter                                       |
+| `/v1/games/{id}/turns`            | `gameTurns`               | SQL-grouped turns, observed actions, life, land counters and unassigned-event counts |
+| `/v1/statistics`                  | `statisticsGet`           | Game-level performance with explicit denominators                                    |
+| `/v1/capture`                     | `captureStatusGet`        | Durable ingestion counts                                                             |
+
+Lists support deck, version, match and mode filters where applicable. They sort
+by first capture order, not an invented game-start timestamp. Keep cursors opaque.
+Event and turn pagination retain a fixed upper capture boundary, including state
+lookups: later backfills cannot reassign events inside an older snapshot. Actions
+join turns through explicit state IDs; unassigned events remain visible.
+
+`capture_complete` means no defined missing-data condition was detected. It does
+not certify a complete Magic rules replay. Flags cover absent initial/terminal
+states, broken or unverifiable state chains, truncation, explicit interruptions,
+unknown attribution/seats and conflicting results. Healthy connection transitions
+and post-result teardown do not alone prove missing gameplay. Unclassified legacy
+connection markers remain in the event feed. A known outcome can coexist with a
+partial capture. Conflicting outcomes become unknown, never an arbitrary win/loss.
+
+`mode` currently recognizes the observed `Ladder` and `Traditional_Ladder` queue
+identifiers as Bo1 and Bo3. Other queues and older captures without this evidence
+remain `unknown`; a single observed game is not proof of Bo1. Match outcomes require
+an explicit match-scoped result and are never inferred from a game's outcome.
+
+`decisive_win_rate` is wins divided by wins plus losses. Draws and unknown results
+are excluded; `decisive_games` is its denominator. Empty samples return null rates.
+Game counts, unique matches, draws, unknowns, partial captures and per-mode counts
+are separate. `complete_only` is optional. Recorded land counters cover sampled
+local turns, excluding stale counters on the opponent's turn. Mulligan averages
+use explicit observed counters and report their sample count.
+
+`local_time` is a zone-less first observed game clock. `match_instant_utc` is
+explicit match-clock evidence, not a reconstructed game-start timestamp. Event
+`instant_utc` values exist only where the source supplies an actual UTC instant.

@@ -11,6 +11,7 @@ pub struct Application {
     pub catalog: Catalog,
     pub decks: Decks,
     pub ingest: crate::ingest::Ingestor,
+    pub history: crate::history::History,
     provider: std::sync::Arc<dyn BulkProvider>,
 }
 
@@ -23,6 +24,7 @@ impl Application {
         Self {
             catalog: Catalog::new(db.clone()),
             ingest: crate::ingest::Ingestor::new(db.clone()),
+            history: crate::history::History::new(db.clone()),
             decks: Decks::new(db),
             provider,
         }

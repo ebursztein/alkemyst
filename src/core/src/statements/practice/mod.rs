@@ -19,7 +19,9 @@ pub const RECEIPT: Statement = Statement {
     cacheable: true,
 };
 pub const CREATE: Mutation = Mutation {
-    sql: "INSERT INTO practice_sessions(id,version_id,origin,created_at,seed,practice_version,replay_version,on_the_play,snapshot) VALUES(?1,?2,?3,unixepoch(),?4,?5,?6,?7,?8)",
+    sql: "INSERT INTO practice_sessions(id,version_id,origin,created_at,seed,practice_version,replay_version,on_the_play,snapshot)
+        SELECT ?1,?2,?3,unixepoch(),?4,?5,?6,?7,?8
+        WHERE EXISTS(SELECT 1 FROM mutation_receipts WHERE key=?9 AND result_id=?10)",
     writes: &["practice_sessions"],
 };
 pub const STEP: Mutation = Mutation {

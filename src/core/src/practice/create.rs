@@ -87,6 +87,8 @@ impl Practice {
                     json!(landlord::REPLAY_VERSION),
                     json!(input.on_the_play),
                     json!(serde_json::to_string(&snapshot)?),
+                    json!(key),
+                    json!(step),
                 ],
                 expected_rows: Some(1),
             },

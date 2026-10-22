@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { startLocalService } from "./local-service.mjs";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { createInterface } from "node:readline";
 import { gzipSync } from "node:zlib";
 
 export async function coverRustCli() {
@@ -21,6 +22,18 @@ export async function coverRustCli() {
     const capture = run("inspect_arena", ["src/core/tests/fixtures/arena-game.txt"]);
     assert.equal(capture.main_deck_versions, 3);
     assert.equal(capture.numbered_games, 1);
+    const captureDatabase = join(directory, "capture.sqlite3");
+    const imported = run("capture", [
+      "import",
+      captureDatabase,
+      "src/core/tests/fixtures/arena-game.txt",
+    ]);
+    assert.equal(imported.games, 1);
+    assert.equal(imported.deck_versions, 3);
+    assert.equal(run("capture", ["status", captureDatabase]).events, imported.events);
+    const watched = await coverCaptureWatch(captureDatabase, directory);
+    assert.equal(watched.games, 1);
+    assert.equal(watched.events, imported.events);
     const archive = join(directory, "cards.jsonl.gz");
     const database = join(directory, "cards.sqlite3");
     writeFileSync(archive, gzipSync(readFileSync("src/core/tests/fixtures/cards.jsonl")));
@@ -49,5 +62,74 @@ export async function coverRustCli() {
     }
   } finally {
     rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+async function coverCaptureWatch(database, directory) {
+  const child = spawn(
+    "cargo",
+    [
+      "llvm-cov",
+      "run",
+      "--no-report",
+      "--locked",
+      "--example",
+      "capture",
+      "--",
+      "watch",
+      database,
+      "src/core/tests/fixtures/arena-game.txt",
+      join(directory, "missing.log"),
+    ],
+    { stdio: ["ignore", "pipe", "inherit"] },
+  );
+  let pid;
+  let result;
+  let signaled = false;
+  const exited = new Promise((resolve, reject) => {
+    child.once("error", reject);
+    child.once("exit", (code) =>
+      code === 0 ? resolve() : reject(new Error(`Capture process exited: ${code}`)),
+    );
+  });
+  // Attach immediately so an early process error cannot become unhandled.
+  const failure = exited.catch(() => {});
+  const timer = setTimeout(() => {
+    if (pid) {
+      try {
+        process.kill(pid, "SIGKILL");
+      } catch {
+        /* already stopped */
+      }
+    }
+    child.kill();
+  }, 60_000);
+  try {
+    for await (const line of createInterface({ input: child.stdout })) {
+      const value = JSON.parse(line);
+      if (value.pid) pid = value.pid;
+      if (value.state === "tracking" && !signaled) {
+        signaled = true;
+        process.kill(pid, "SIGINT");
+      }
+      if (value.games !== undefined) result = value;
+    }
+    await exited;
+    assert.equal(signaled, true, "capture must process retained history before shutdown");
+    assert.ok(result, "capture must report final counts");
+    return result;
+  } finally {
+    clearTimeout(timer);
+    if (child.exitCode === null && child.signalCode === null) {
+      if (pid) {
+        try {
+          process.kill(pid, "SIGKILL");
+        } catch {
+          /* already stopped */
+        }
+      }
+      child.kill();
+    }
+    await failure;
   }
 }

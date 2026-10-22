@@ -11,3 +11,5 @@ pub use api::ApiDoc;
 pub use health::{BuildInfo, build_info};
 
 pub mod mcp;
+
+pub mod ingest;

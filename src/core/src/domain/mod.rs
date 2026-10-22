@@ -3,6 +3,8 @@ mod arena_text;
 mod decks;
 mod models;
 mod notes;
+mod outcome;
+pub use outcome::ObservedOutcome;
 mod text_operations;
 mod validation;
 

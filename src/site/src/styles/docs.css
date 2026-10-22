@@ -1,0 +1,12 @@
+@import "@alkemyst/desktop/palette.css";
+:root {
+  --sl-font: var(--alkemyst-font-sans);
+  --sl-color-accent-low: var(--alkemyst-brand-tint-dark);
+  --sl-color-accent: var(--alkemyst-brand-dark);
+  --sl-color-accent-high: var(--alkemyst-brand-tint-light);
+}
+:root[data-theme="light"] {
+  --sl-color-accent-low: var(--alkemyst-brand-tint-light);
+  --sl-color-accent: var(--alkemyst-brand-light);
+  --sl-color-accent-high: var(--alkemyst-brand-hover-light);
+}

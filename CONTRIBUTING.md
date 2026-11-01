@@ -28,6 +28,13 @@ Coverage includes untested owned modules. Rust minimum: 85% lines overall and
 80% branches. Generated and unmodified third-party source is excluded explicitly.
 Coverage reports are CI artifacts; thresholds are never lowered to mask failures.
 
+CI keeps PR coverage/browser and security reports for one day, and main/tag reports
+for seven days. Failed Windows loader diagnostics remain available for seven days.
+Installer verification still runs on PRs, but installer binaries are uploaded only
+for explicit manual builds or release tags, with one-day transfer retention.
+Long-lived installers belong in GitHub Releases. Existing archives retain their
+original expiry unless separately removed.
+
 Dependency findings block CI. Any exceptional suppression must identify the
 advisory, explain applicability, name an owner, and expire. Scanner errors fail.
 

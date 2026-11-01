@@ -67,8 +67,8 @@ and copy-installs the DMG but skips launching an app against the user's profile.
 Windows install/uninstall verification refuses to run outside CI.
 
 PR verification builds and tests installers without uploading their binaries.
-Explicit manual builds and release tags retain installers, checksums and manifests
-for one day to support transfer between jobs. Long-lived downloads belong in
-GitHub Releases. Download-page links must point to a verified GitHub Release once the
+Manual builds also keep binaries only on the runner. Release tags transfer
+installers, checksums and manifests between jobs for at most one day; successful
+release assembly deletes those transfers. Downloads belong in GitHub Releases. Download-page links must point to a verified GitHub Release once the
 separate preview-release workflow is enabled. Source builds and verification
 artifacts alone do not establish an available public release.

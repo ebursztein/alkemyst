@@ -24,4 +24,4 @@ jobs:
         with:
           name: osv-report
           path: work/security/
-          retention-days: 30
+          retention-days: ${{ github.event_name == 'pull_request' && 1 || 7 }}

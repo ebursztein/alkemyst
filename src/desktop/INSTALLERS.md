@@ -41,7 +41,9 @@ inspection is available with
 and copy-installs the DMG but skips launching an app against the user's profile.
 Windows install/uninstall verification refuses to run outside CI.
 
-Successful workflow artifacts contain installers, checksums and manifests for
-14 days. Download-page links must point to a verified GitHub Release once the
+PR verification builds and tests installers without uploading their binaries.
+Explicit manual builds and release tags retain installers, checksums and manifests
+for one day to support transfer between jobs. Long-lived downloads belong in
+GitHub Releases. Download-page links must point to a verified GitHub Release once the
 separate preview-release workflow is enabled. Source builds and verification
 artifacts alone do not establish an available public release.

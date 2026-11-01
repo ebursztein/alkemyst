@@ -22,7 +22,11 @@ for menus, tray lifecycle, installers and OS integration.
 Coverage includes untested owned modules. Rust minimum: 85% lines overall and
 90% for SQL/domain code. TypeScript minimum: 85% lines/statements/functions and
 80% branches. Generated and unmodified third-party source is excluded explicitly.
-Coverage reports are CI artifacts; thresholds are never lowered to mask failures.
+Coverage thresholds are never lowered to mask failures. CI keeps results in job
+logs and summaries; it does not upload coverage, browser or security archives.
+Installer verification runs on PRs and manual builds without uploading binaries.
+Release tags use one-day installer transfers between jobs, removed after successful
+release assembly. Distributable installers belong in GitHub Releases.
 
 Dependency findings block CI. Any exceptional suppression must identify the
 advisory, explain applicability, name an owner, and expire. Scanner errors fail.

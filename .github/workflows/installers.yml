@@ -61,9 +61,10 @@ jobs:
         shell: pwsh
         run: ./scripts/verify-windows-install.ps1 -Packages work/packages/${{ matrix.target }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: success()
+        # Only release assembly needs a temporary cross-job binary transfer.
+        if: success() && startsWith(github.ref, 'refs/tags/v')
         with:
           name: preview-${{ matrix.target }}
           path: work/packages/${{ matrix.target }}/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 1

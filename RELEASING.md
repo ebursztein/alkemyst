@@ -41,6 +41,12 @@ unrelated draft or an authentication/read error fails instead of silently replac
 release contents. Rerun the failed workflow after fixing an external interruption;
 source changes require a new version/tag.
 
+Installer transfer artifacts expire after one day; the verified binaries live in
+the GitHub draft release. The final Actions artifact contains only manifests,
+checksums and release notes for seven days, without another copy of the installers.
+If transfer artifacts have expired, rerun all tag jobs to rebuild them before
+assembly; rerunning only the failed assembly job cannot recover expired archives.
+
 ## Publication and remaining prerequisites
 
 Before publishing a draft, verify both platform results, package/source manifests,

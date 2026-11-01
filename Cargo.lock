@@ -33,7 +33,7 @@ dependencies = [
 
 [[package]]
 name = "alkemyst-core"
-version = "0.1.0"
+version = "0.1.0-preview.1"
 dependencies = [
  "async-trait",
  "axum",
@@ -62,7 +62,7 @@ dependencies = [
 
 [[package]]
 name = "alkemyst-desktop"
-version = "0.1.0"
+version = "0.1.0-preview.1"
 dependencies = [
  "alkemyst-core",
  "embed-resource",
@@ -2398,7 +2398,7 @@ dependencies = [
 
 [[package]]
 name = "landlord"
-version = "0.1.0"
+version = "0.1.0-preview.1"
 dependencies = [
  "rand_core",
  "rand_pcg",

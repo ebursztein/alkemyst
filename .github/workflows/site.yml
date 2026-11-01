@@ -49,9 +49,9 @@ jobs:
           fi
           echo "### Site delivery mode: $SITE_DEPLOYMENT_MODE" >> "$GITHUB_STEP_SUMMARY"
           if [ "$SITE_DEPLOYMENT_MODE" = manual ]; then
-            echo "CI validates and retains the static artifact. Publication uses a separate local Wrangler deployment; a green validation run does not publish the site." >> "$GITHUB_STEP_SUMMARY"
+            echo "CI validates the static site without retaining build archives. Publication uses a separate local Wrangler deployment; a green validation run does not publish the site." >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "Main publishes the validated artifact through the deployment job and verifies the live site." >> "$GITHUB_STEP_SUMMARY"
+            echo "Main rebuilds the validated source through the deployment job and verifies the live site." >> "$GITHUB_STEP_SUMMARY"
           fi
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -68,18 +68,6 @@ jobs:
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm check:architecture
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: site-static-${{ github.sha }}
-          path: src/site/dist/
-          if-no-files-found: error
-          retention-days: 14
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
-        with:
-          name: site-browser-report
-          path: playwright-report/site/
-          retention-days: 14
   deploy:
     name: Deploy verified static site
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.SITE_DEPLOYMENT_MODE == 'automatic'
@@ -102,16 +90,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Require scoped deployment credentials
         run: node -e 'if (!process.env.CLOUDFLARE_ACCOUNT_ID || !process.env.CLOUDFLARE_API_TOKEN) throw new Error("Set the CLOUDFLARE_ACCOUNT_ID repository variable and CLOUDFLARE_API_TOKEN deployment secret")'
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: site-static-${{ github.sha }}
-          path: src/site/dist/
+      - run: pnpm site:build
       - run: pnpm exec wrangler deploy --config src/site/wrangler.jsonc
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:site
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
-        with:
-          name: deployed-site-browser-report
-          path: playwright-report/site/
-          retention-days: 14
